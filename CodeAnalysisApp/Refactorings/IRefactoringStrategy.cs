@@ -1,9 +1,10 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Threading.Tasks;
 
 namespace CodeAnalysisApp.Refactorings
 {
 	public interface IRefactoringStrategy
 	{
-		void ApplyRefactoring(Solution workspace);
+		Task ApplyRefactoring(Solution solution);
 	}
 }

@@ -41,7 +41,7 @@ namespace CodeAnalysisApp.Analyzer
 				Console.WriteLine($"Finished loading solution '{solutionPath}'");
 
 				// TODO: Do analysis on the projects in the loaded solution
-				RefactoringStrategyFactory.Create("localCallToRemoteSynchronousCall").ApplyRefactoring(solution);
+				await RefactoringStrategyFactory.Create("localCallToRemoteSynchronousCall").ApplyRefactoring(solution);
 			}
 		}
 
