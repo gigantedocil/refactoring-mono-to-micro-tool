@@ -11,4 +11,6 @@ namespace CodeAnalysisApp
 			new RefactoringsWriter().BeginWriting();
 		}
 	}
+
+	// TODO: Usar HTTP POST sempre a rota fica o nome da classe mais o nome do método.
 }
