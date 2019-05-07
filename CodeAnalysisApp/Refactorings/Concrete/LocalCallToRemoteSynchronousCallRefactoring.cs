@@ -21,7 +21,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				var syntaxTree = await document.GetSyntaxTreeAsync();
 				var treeRoot = await syntaxTree.GetRootAsync();
 
-				var a = treeRoot.ChildNodes();			
+				var a = treeRoot.ChildNodes();
 
 				var b = treeRoot.DescendantNodes();
 
@@ -32,7 +32,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			{
 				var semanticModel = await document.GetSemanticModelAsync();
 				Console.WriteLine(semanticModel);
-			}									
+			}
 
 			throw new NotImplementedException();
 		}

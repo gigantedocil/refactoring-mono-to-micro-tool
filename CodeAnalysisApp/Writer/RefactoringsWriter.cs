@@ -6,19 +6,19 @@ namespace CodeAnalysisApp.Writer
 	public class RefactoringsWriter
 	{
 		private readonly string microserviceApplicationUrl = "pricingServiceApplicationUrl";
-		private readonly  string microserviceConfigurationKey = "PricingMicroservice";
-		private readonly  string methodName = "";
-		private readonly  string wrapperMethodName = "GetRoomPricing";
-		private readonly  string wrapperMethodSignature = "public float GetRoomPricing(int roomId)";
-		private readonly  string fileReadLocation = @"C:\Users\Findmore\Desktop\RoomsService.cs";
+		private readonly string microserviceConfigurationKey = "PricingMicroservice";
+		private readonly string methodName = "";
+		private readonly string wrapperMethodName = "GetRoomPricing";
+		private readonly string wrapperMethodSignature = "public float GetRoomPricing(int roomId)";
+		private readonly string fileReadLocation = @"C:\Users\Findmore\Desktop\RoomsService.cs";
 		private readonly string fileWriteLocation = @"C:\Users\Findmore\Desktop\RoomsDemoService.cs";
 
 		public void BeginWriting()
 		{
-			var lines = new List<string>(File.ReadAllLines(fileReadLocation));	
-			
+			var lines = new List<string>(File.ReadAllLines(fileReadLocation));
+
 			WriteClassFields(lines);
-			WriteConstructor(lines);			
+			WriteConstructor(lines);
 			WriteMethodSignature(lines);
 			WriteMethod(lines);
 
@@ -75,13 +75,13 @@ namespace CodeAnalysisApp.Writer
 		}
 
 		private void WriteMethod(List<string> lines)
-		{			
+		{
 			int index = lines.FindIndex(l => l.Contains("var roomPrice =  pricingService.CalculatePrice(roomType);"));
 
 			lines.Insert(index, "\t\t\tvar roomPrice = await response.Content.ReadAsAsync<float>();");
 			lines.Insert(index, "\t\t\tvar response = await httpClient.GetAsync(url);");
 			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/\" + \"CalculatePrice ? \" + nameof(roomType) + \" = \" + roomType;");
-			lines.RemoveAt(index + 3);			
-		}		
+			lines.RemoveAt(index + 3);
+		}
 	}
 }

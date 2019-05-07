@@ -9,6 +9,6 @@ namespace CodeAnalysisApp
 		{
 			// await new RefactoringsAnalyzer().BeginAnalysis();
 			new RefactoringsWriter().BeginWriting();
-		}		
+		}
 	}
 }
