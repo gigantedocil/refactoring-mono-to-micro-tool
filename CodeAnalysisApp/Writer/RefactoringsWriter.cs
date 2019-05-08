@@ -17,6 +17,7 @@ namespace CodeAnalysisApp.Writer
 		{
 			var lines = new List<string>(File.ReadAllLines(fileReadLocation));
 
+			WriteUsings(lines);
 			WriteClassFields(lines);
 			WriteConstructor(lines);
 			WriteMethodSignature(lines);
@@ -25,6 +26,19 @@ namespace CodeAnalysisApp.Writer
 			var file = string.Join("\n", lines);
 
 			File.WriteAllText(fileWriteLocation, file);
+		}
+
+		private void WriteUsings(List<string> lines)
+		{
+			if (lines.FindIndex(l => l.Contains("using System.Threading.Tasks;")) == -1)
+			{
+				lines.Insert(0, "using System.Threading.Tasks;");
+			}
+
+			if (lines.FindIndex(l => l.Contains("using Newtonsoft.Json;")) == -1)
+			{
+				lines.Insert(0, "using Newtonsoft.Json;");
+			}
 		}
 
 		private void WriteClassFields(List<string> lines)
@@ -60,27 +74,22 @@ namespace CodeAnalysisApp.Writer
 		}
 
 		private void WriteMethodSignature(List<string> lines)
-		{
-			if (lines.FindIndex(l => l.Contains("using System.Threading.Tasks;")) == -1)
-			{
-				lines.Insert(0, "using System.Threading.Tasks;");
-			}
-
+		{			
 			var index = lines.FindIndex(l => l.Contains(wrapperMethodSignature));
 			var aux = new List<string>(lines[index].Split(' '));
 			var innerIndex = aux.FindIndex(x => x.Contains(wrapperMethodName));
 
 			aux[innerIndex - 1] = $"Task<{aux[innerIndex - 1]}>";
 			lines[index] = string.Join(" ", aux);
-		}
+		}		
 
 		private void WriteMethod(List<string> lines)
 		{
 			int index = lines.FindIndex(l => l.Contains("var roomPrice =  pricingService.CalculatePrice(roomType);"));
 
-			lines.Insert(index, "\t\t\tvar roomPrice = await response.Content.ReadAsAsync<float>();");
-			lines.Insert(index, "\t\t\tvar response = await httpClient.GetAsync(url);");
-			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/\" + \"CalculatePrice ? \" + nameof(roomType) + \" = \" + roomType;");
+			lines.Insert(index, "\t\t\tvar response = await httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\"));");
+			lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(roomType);");
+			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/CalculatePrice\";");
 			lines.RemoveAt(index + 3);
 		}
 	}
