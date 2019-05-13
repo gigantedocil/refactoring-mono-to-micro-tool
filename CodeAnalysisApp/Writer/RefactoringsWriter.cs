@@ -18,7 +18,7 @@ namespace CodeAnalysisApp.Writer
 			var lines = new List<string>(File.ReadAllLines(fileReadLocation));
 
 			WriteUsings(lines);
-			WriteClassFields(lines);
+			WriteFields(lines);
 			WriteConstructor(lines);
 			WriteMethodSignature(lines);
 			WriteMethod(lines);
@@ -41,7 +41,7 @@ namespace CodeAnalysisApp.Writer
 			}
 		}
 
-		private void WriteClassFields(List<string> lines)
+		private void WriteFields(List<string> lines)
 		{
 			var index = lines.FindIndex(l => l.Contains("public RoomsService"));
 
@@ -87,10 +87,11 @@ namespace CodeAnalysisApp.Writer
 		{
 			int index = lines.FindIndex(l => l.Contains("var roomPrice =  pricingService.CalculatePrice(roomType);"));
 
+			lines.Insert(index, "\t\t\tvar roomPrice = await response.Content.ReadAsAsync<float>();");
 			lines.Insert(index, "\t\t\tvar response = await httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\"));");
 			lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(roomType);");
 			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/CalculatePrice\";");
-			lines.RemoveAt(index + 3);
+			lines.RemoveAt(index + 4);
 		}
 	}
 }
