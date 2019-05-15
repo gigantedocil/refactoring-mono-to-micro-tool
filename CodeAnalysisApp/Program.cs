@@ -16,4 +16,7 @@ namespace CodeAnalysisApp
 	// TODO: Usar HTTP POST sempre a rota fica o nome da classe mais o nome do método.
 	// TODO: Ir buscar todas as classes da solution e depois quando se está a ir buscar cada um dos objetos 
 	// usados na classe verificar se fazem parte dessa primeira lista. Hope this makes sense tomorrow :)
+
+	// Ver todas as classes de um ficheiro e procurar por elas no class registry porque lá tem o path delas. Se for
+	// interface procurar todas as implementações.
 }

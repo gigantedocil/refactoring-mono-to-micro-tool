@@ -15,9 +15,14 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		public async Task ApplyRefactoring(Solution solution)
 		{
+
+			await GetSolutionClasses(solution);
 			// Debug
 			var project = solution.Projects.Where(p => p.Name == "MonolithDemo").FirstOrDefault();
 
+
+			//solution.semanticModel
+			//solution.semantic
 
 
 			//var compilation = await project.GetCompilationAsync();
@@ -27,16 +32,18 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			//var classes = classVisitor.classes;
 
-			var document = project.Documents.Where(d => d.Name == "RoomsService.cs").FirstOrDefault();
+			var document = project.Documents.Where(d => d.Name == "RoomsService.cs").FirstOrDefault();			
 
-			var semanticModel = document.GetSemanticModelAsync();
+			var semanticModel = await document.GetSemanticModelAsync();
 
-			//var classVisitor = new ClassVirtualizationVisitor();
-			//classVisitor.Visit(semanticModel.);
+			var syntaxTree = await document.GetSyntaxTreeAsync();
+
+			var invocationSyntax = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>().First();
+			var invokedSymbol = semanticModel.GetSymbolInfo(invocationSyntax).Symbol;			
 
 			if (document.SupportsSyntaxTree)
 			{
-				var syntaxTree = await document.GetSyntaxTreeAsync();
+
 				var treeRoot = await syntaxTree.GetRootAsync();
 
 				var list1 = treeRoot.DescendantNodes().OfType<SimpleNameSyntax>().ToList();
@@ -46,33 +53,45 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 				var list5 = treeRoot.DescendantNodes().OfType<ClassOrStructConstraintSyntax>().ToList();
 				var list6 = new HashSet<IdentifierNameSyntax>(classDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToList());
-				var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();
-
-				var classVisitor = new ClassVirtualizationVisitor();
-				//classVisitor.Visit(treeRoot);
-
-				//var classes = classVisitor.classes; // li
-
-				//foreach (UsingDirectiveSyntax element in root.Usings)
-				//{
-				//	var bc = element;
-				//}
-				//Classifier.GetClassifiedSpans()
+				var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();								
 
 				var a = treeRoot.ChildNodes();
 
-				var b = treeRoot.DescendantNodes();
+				var b = treeRoot.DescendantNodes();				
+			}			
+		}
 
-				//Console.WriteLine(syntaxTree);
+		private async Task<int> GetSolutionClasses(Solution solution)
+		{
+			var nodes = new HashSet<InvocationExpressionSyntax>();
+			var symbols = new HashSet<ISymbol>();
+			var strings = new HashSet<string>();
+			var documents = new HashSet<Document>();
+
+			foreach (var project in solution.Projects)
+			{
+				foreach (var document in project.Documents)
+				{
+					documents.Add(document);
+
+					var syntaxTree = await document.GetSyntaxTreeAsync();
+					var treeRoot = await syntaxTree.GetRootAsync();
+
+					foreach (var node in treeRoot.DescendantNodes().OfType<InvocationExpressionSyntax>())
+					{
+						nodes.Add(node);
+
+						// strings.Add(node.Identifier.ValueText);
+
+						var semanticModel = await document.GetSemanticModelAsync();
+						var classDeclarationSymbol = semanticModel.GetSymbolInfo(node).Symbol;
+
+						symbols.Add(classDeclarationSymbol);
+					}
+				}
 			}
 
-			//if (document.SupportsSemanticModel)
-			//{
-			//	var semanticModel = await document.GetSemanticModelAsync();
-			//	Console.WriteLine(semanticModel);
-			//}
-
-			//throw new NotImplementedException();
+			return 0;
 		}
 	}
 
