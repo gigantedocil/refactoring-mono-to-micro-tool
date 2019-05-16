@@ -32,7 +32,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			var invocationSyntax = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>().First();
 			var invokedSymbol = semanticModel.GetSymbolInfo(invocationSyntax).Symbol;
 
-			GetInvokationMethodType(document);
+			await GetInvokationMethodType(solution);
 
 			if (document.SupportsSyntaxTree)
 			{
@@ -65,8 +65,12 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			}
 		}
 
-		private async Task GetInvokationMethodType(Document document)
+		private async Task GetInvokationMethodType(Solution solution)
 		{
+			var project = solution.Projects.Where(p => p.Name == ProjectName).FirstOrDefault();
+
+			var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
+
 			var syntaxTree = await document.GetSyntaxTreeAsync();
 
 			var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
@@ -76,6 +80,19 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			var semanticModel = await document.GetSemanticModelAsync();
 
 			var invokedMethodMetadata = semanticModel.GetSymbolInfo(method).Symbol;
+
+			var type = invokedMethodMetadata.ContainingType;
+
+
+
+			// TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
+
+			var treeRoot = await syntaxTree.GetRootAsync();
+
+			var classDeclaration = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList().FirstOrDefault();
+
+			var list6 = new HashSet<IdentifierNameSyntax>(classDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToList());
+			var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();
 
 			// If it is an interface get implementations.
 			// Otherwise search for types inside types.
