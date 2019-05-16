@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -11,35 +9,30 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 {
 	public class LocalCallToRemoteSynchronousCallRefactoring : IRefactoringStrategy
 	{
-		public LocalCallToRemoteSynchronousCallRefactoring() { }
+		private ISet<Document> SolutionDocuments = new HashSet<Document>();
+
+		private readonly string ProjectName = "MonolithDemo";
+
+		private readonly string ClassName = "RoomsService.cs";
+
+		private readonly string MethodName = "CalculatePrice";
 
 		public async Task ApplyRefactoring(Solution solution)
 		{
+			GetSolutionClasses(solution);
 
-			await GetSolutionClasses(solution);
-			// Debug
-			var project = solution.Projects.Where(p => p.Name == "MonolithDemo").FirstOrDefault();
+			var project = solution.Projects.Where(p => p.Name == ProjectName).FirstOrDefault();
 
-
-			//solution.semanticModel
-			//solution.semantic
-
-
-			//var compilation = await project.GetCompilationAsync();
-
-			//var classVisitor = new ClassVirtualizationVisitor();
-			//classVisitor.Visit(semanticModel.SyntaxTree.getRoot());
-
-			//var classes = classVisitor.classes;
-
-			var document = project.Documents.Where(d => d.Name == "RoomsService.cs").FirstOrDefault();			
+			var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
 
 			var semanticModel = await document.GetSemanticModelAsync();
 
 			var syntaxTree = await document.GetSyntaxTreeAsync();
 
 			var invocationSyntax = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>().First();
-			var invokedSymbol = semanticModel.GetSymbolInfo(invocationSyntax).Symbol;			
+			var invokedSymbol = semanticModel.GetSymbolInfo(invocationSyntax).Symbol;
+
+			GetInvokationMethodType(document);
 
 			if (document.SupportsSyntaxTree)
 			{
@@ -53,60 +46,39 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 				var list5 = treeRoot.DescendantNodes().OfType<ClassOrStructConstraintSyntax>().ToList();
 				var list6 = new HashSet<IdentifierNameSyntax>(classDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToList());
-				var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();								
+				var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();
 
 				var a = treeRoot.ChildNodes();
 
-				var b = treeRoot.DescendantNodes();				
-			}			
+				var b = treeRoot.DescendantNodes();
+			}
 		}
 
-		private async Task<int> GetSolutionClasses(Solution solution)
+		private void GetSolutionClasses(Solution solution)
 		{
-			var nodes = new HashSet<InvocationExpressionSyntax>();
-			var symbols = new HashSet<ISymbol>();
-			var strings = new HashSet<string>();
-			var documents = new HashSet<Document>();
-
 			foreach (var project in solution.Projects)
 			{
 				foreach (var document in project.Documents)
 				{
-					documents.Add(document);
-
-					var syntaxTree = await document.GetSyntaxTreeAsync();
-					var treeRoot = await syntaxTree.GetRootAsync();
-
-					foreach (var node in treeRoot.DescendantNodes().OfType<InvocationExpressionSyntax>())
-					{
-						nodes.Add(node);
-
-						// strings.Add(node.Identifier.ValueText);
-
-						var semanticModel = await document.GetSemanticModelAsync();
-						var classDeclarationSymbol = semanticModel.GetSymbolInfo(node).Symbol;
-
-						symbols.Add(classDeclarationSymbol);
-					}
+					SolutionDocuments.Add(document);
 				}
 			}
-
-			return 0;
 		}
-	}
 
-	public class ClassVirtualizationVisitor : CSharpSyntaxRewriter
-	{
-		public List<string> classes = new List<string>();
-
-		public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+		private async Task GetInvokationMethodType(Document document)
 		{
-			node = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
+			var syntaxTree = await document.GetSyntaxTreeAsync();
 
-			string className = node.Identifier.ValueText;
-			classes.Add(className); // save your visited classes
+			var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
 
-			return node;
+			var method = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
+
+			var semanticModel = await document.GetSemanticModelAsync();
+
+			var invokedMethodMetadata = semanticModel.GetSymbolInfo(method).Symbol;
+
+			// If it is an interface get implementations.
+			// Otherwise search for types inside types.
 		}
 	}
 }
