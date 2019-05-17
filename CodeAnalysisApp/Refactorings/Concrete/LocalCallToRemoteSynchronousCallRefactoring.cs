@@ -83,7 +83,23 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			var type = invokedMethodMetadata.ContainingType;
 
+			var documents = project.Documents;
 
+			var documentsTrees = new HashSet<SyntaxTree>();
+
+			var semanticModels = new HashSet<SemanticModel>();
+
+			foreach (var documenta in documents)
+			{
+				documentsTrees.Add(await documenta.GetSyntaxTreeAsync());
+
+				semanticModels.Add(await documenta.GetSemanticModelAsync());
+
+				// Investigate the semantic model to see if there's anything that can be used to match the type.displaystring
+			}
+
+			// Won't work if there are multiple files with the same name.
+			var selected = documentsTrees.FirstOrDefault(x => x.FilePath.Contains(type.ToDisplayString()));
 
 			// TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
 
