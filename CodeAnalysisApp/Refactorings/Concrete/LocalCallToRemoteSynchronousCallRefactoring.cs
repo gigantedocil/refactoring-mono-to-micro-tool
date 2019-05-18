@@ -82,7 +82,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			if (interfaceest != null)
 			{
 
-				var interfaceSymbol = document.SemanticModel.GetSymbolInfo(interfaceest).Symbol;				
+				var interfaceSymbol = document.SemanticModel.GetSymbolInfo(interfaceest).Symbol;
 
 				var implementations = await SymbolFinder.FindImplementationsAsync(interfaceSymbol, solution);
 			}
@@ -119,25 +119,42 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		private async Task<string> GetNameFromDocument(Document document)
 		{
 			var syntaxTree = await document.GetSyntaxTreeAsync();
-			var semanticModel = await document.GetSemanticModelAsync();
+
 			var root = syntaxTree.GetRoot();
 
-			INamedTypeSymbol typeInfo = null;
+			string typeName = null;
 
-			MemberAccessExpressionSyntax member = GetMemberAccessExpressionSyntax(root);
-			if (member != null)
+			string nameSpace = null;
+
+			var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+
+			if (namespaceDeclaration != null)
 			{
-				var firstChild = member.ChildNodes().ElementAt(0);
-				typeInfo = semanticModel.GetTypeInfo(firstChild).Type as INamedTypeSymbol;
+				nameSpace = namespaceDeclaration.Name.ToString();
 			}
 
-			return typeInfo.ToDisplayString();
-		}
+			var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
 
-		private MemberAccessExpressionSyntax GetMemberAccessExpressionSyntax(SyntaxNode node)
-		{
-			return node.DescendantNodes().Where(curr => curr is MemberAccessExpressionSyntax)
-				.ToList().FirstOrDefault() as MemberAccessExpressionSyntax;
+			if (classDeclaration == null)
+			{
+				var interfaceDeclaration = root.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
+
+				if (interfaceDeclaration != null)
+				{
+					typeName = interfaceDeclaration.Identifier.ToString();
+				}
+			}
+			else
+			{
+				typeName = classDeclaration.Identifier.ToString();
+			}
+
+			if (nameSpace == null || typeName == null)
+			{
+				return "";
+			}
+
+			return nameSpace + "." + typeName;
 		}
 	}
 }
