@@ -71,7 +71,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			// Otherwise search for types inside types.
 		}
 
-		public async Task InitializeDocumentRegistry(Solution solution)
+		private async Task InitializeDocumentRegistry(Solution solution)
 		{
 			foreach (var project in solution.Projects)
 			{
@@ -91,7 +91,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		}
 
-		public async Task<string> GetNameFromDocument(Document document)
+		private async Task<string> GetNameFromDocument(Document document)
 		{
 			var syntaxTree = await document.GetSyntaxTreeAsync();
 			var semanticModel = await document.GetSemanticModelAsync();
@@ -109,7 +109,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			return typeInfo.ToDisplayString();
 		}
 
-		public MemberAccessExpressionSyntax GetMemberAccessExpressionSyntax(SyntaxNode node)
+		private MemberAccessExpressionSyntax GetMemberAccessExpressionSyntax(SyntaxNode node)
 		{
 			return node.DescendantNodes().Where(curr => curr is MemberAccessExpressionSyntax)
 				.ToList().FirstOrDefault() as MemberAccessExpressionSyntax;
