@@ -12,6 +12,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 	{
 		private ISet<Document> SolutionDocuments = new HashSet<Document>();
 
+		private ISet<DocumentAnalyzerAggregate> documentsRegistry = new HashSet<DocumentAnalyzerAggregate>();
+
 		private readonly string ProjectName = "MonolithDemo";
 
 		private readonly string ClassName = "RoomsService.cs";
@@ -19,40 +21,10 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		private readonly string MethodName = "CalculatePrice";
 
 		public async Task ApplyRefactoring(Solution solution)
-		{
-			GetSolutionClasses(solution);
-
-			var project = solution.Projects.Where(p => p.Name == ProjectName).FirstOrDefault();
-
-			var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
-
-			var semanticModel = await document.GetSemanticModelAsync();
-
-			var syntaxTree = await document.GetSyntaxTreeAsync();
-
-			var invocationSyntax = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>().First();
-			var invokedSymbol = semanticModel.GetSymbolInfo(invocationSyntax).Symbol;
-
-			await GetInvokationMethodType(solution);
-
-			if (document.SupportsSyntaxTree)
-			{
-
-				var treeRoot = await syntaxTree.GetRootAsync();
-
-				var list1 = treeRoot.DescendantNodes().OfType<SimpleNameSyntax>().ToList();
-				var list2 = treeRoot.DescendantNodes().OfType<MemberDeclarationSyntax>().ToList();
-				var list3 = treeRoot.DescendantNodes().OfType<CompilationUnitSyntax>().ToList();
-				var classDeclaration = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList().FirstOrDefault();
-
-				var list5 = treeRoot.DescendantNodes().OfType<ClassOrStructConstraintSyntax>().ToList();
-				var list6 = new HashSet<IdentifierNameSyntax>(classDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToList());
-				var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();
-
-				var a = treeRoot.ChildNodes();
-
-				var b = treeRoot.DescendantNodes();
-			}
+		{			
+			await InitializeDocumentRegistry(solution);
+			
+			await GetInvokationMethodType(solution);			
 		}
 
 		private void GetSolutionClasses(Solution solution)
@@ -82,31 +54,9 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			var invokedMethodMetadata = semanticModel.GetSymbolInfo(method).Symbol;
 
-			var type = invokedMethodMetadata.ContainingType;
-
-			var documents = project.Documents;
-
-			var documentsTrees = new HashSet<SyntaxTree>();
-
-			var semanticModels = new HashSet<SemanticModel>();
-
-			var documentAnalyzerAggregates = new HashSet<DocumentAnalyzerAggregate>();
-
-			foreach (var documenta in documents)
-			{
-				documentAnalyzerAggregates.Add(
-					new DocumentAnalyzerAggregate()
-					{
-						Document = documenta,
-						SyntaxTree = await documenta.GetSyntaxTreeAsync(),
-						SemanticModel = await documenta.GetSemanticModelAsync(),
-						DocumentTypeFullName = await GetNameFromDocument(documenta)
-					}
-				);				
-			}
-
-			// Won't work if there are multiple files with the same name.
-			var selected = documentsTrees.FirstOrDefault(x => x.FilePath.Contains(type.ToDisplayString()));
+			var typeFullName = invokedMethodMetadata.ContainingType.ToDisplayString();
+		
+			var selected = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
 
 			// TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
 
@@ -119,6 +69,26 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			// If it is an interface get implementations.
 			// Otherwise search for types inside types.
+		}
+
+		public async Task InitializeDocumentRegistry(Solution solution)
+		{
+			foreach (var project in solution.Projects)
+			{
+				foreach (var document in project.Documents)
+				{
+					documentsRegistry.Add(
+						new DocumentAnalyzerAggregate()
+						{
+							Document = document,
+							SyntaxTree = await document.GetSyntaxTreeAsync(),
+							SemanticModel = await document.GetSemanticModelAsync(),
+							DocumentTypeFullName = await GetNameFromDocument(document)
+						}
+					);
+				}
+			}
+
 		}
 
 		public async Task<string> GetNameFromDocument(Document document)
