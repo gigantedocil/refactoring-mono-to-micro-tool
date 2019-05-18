@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CodeAnalysisApp.Analyzer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -89,13 +90,19 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			var semanticModels = new HashSet<SemanticModel>();
 
+			var documentAnalyzerAggregates = new HashSet<DocumentAnalyzerAggregate>();
+
 			foreach (var documenta in documents)
 			{
-				documentsTrees.Add(await documenta.GetSyntaxTreeAsync());
-
-				semanticModels.Add(await documenta.GetSemanticModelAsync());
-
-				// Investigate the semantic model to see if there's anything that can be used to match the type.displaystring
+				documentAnalyzerAggregates.Add(
+					new DocumentAnalyzerAggregate()
+					{
+						Document = documenta,
+						SyntaxTree = await documenta.GetSyntaxTreeAsync(),
+						SemanticModel = await documenta.GetSemanticModelAsync(),
+						DocumentTypeFullName = await GetNameFromDocument(documenta)
+					}
+				);				
 			}
 
 			// Won't work if there are multiple files with the same name.
@@ -112,6 +119,30 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			// If it is an interface get implementations.
 			// Otherwise search for types inside types.
+		}
+
+		public async Task<string> GetNameFromDocument(Document document)
+		{
+			var syntaxTree = await document.GetSyntaxTreeAsync();
+			var semanticModel = await document.GetSemanticModelAsync();
+			var root = syntaxTree.GetRoot();
+
+			INamedTypeSymbol typeInfo = null;
+
+			MemberAccessExpressionSyntax member = GetMemberAccessExpressionSyntax(root);
+			if (member != null)
+			{
+				var firstChild = member.ChildNodes().ElementAt(0);
+				typeInfo = semanticModel.GetTypeInfo(firstChild).Type as INamedTypeSymbol;
+			}
+
+			return typeInfo.ToDisplayString();
+		}
+
+		public MemberAccessExpressionSyntax GetMemberAccessExpressionSyntax(SyntaxNode node)
+		{
+			return node.DescendantNodes().Where(curr => curr is MemberAccessExpressionSyntax)
+				.ToList().FirstOrDefault() as MemberAccessExpressionSyntax;
 		}
 	}
 }
