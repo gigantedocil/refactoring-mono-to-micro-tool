@@ -5,6 +5,7 @@ using CodeAnalysisApp.Analyzer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace CodeAnalysisApp.Refactorings.Concrete
 {
@@ -21,10 +22,10 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		private readonly string MethodName = "CalculatePrice";
 
 		public async Task ApplyRefactoring(Solution solution)
-		{			
+		{
 			await InitializeDocumentRegistry(solution);
-			
-			await GetInvokationMethodType(solution);			
+
+			await GetInvokationMethodType(solution);
 		}
 
 		private void GetSolutionClasses(Solution solution)
@@ -44,23 +45,47 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
 
+			var semanticModel = await document.GetSemanticModelAsync();
+
 			var syntaxTree = await document.GetSyntaxTreeAsync();
 
 			var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
 
-			var method = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
+			var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
 
-			var semanticModel = await document.GetSemanticModelAsync();
-
-			var invokedMethodMetadata = semanticModel.GetSymbolInfo(method).Symbol;
+			var invokedMethodMetadata = semanticModel.GetSymbolInfo(invokedMethod).Symbol;
 
 			var typeFullName = invokedMethodMetadata.ContainingType.ToDisplayString();
-		
-			var selected = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
+
+			var invokedMethodDocument = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
+
+			await RecursiveMethod(invokedMethodDocument, solution);
+		}
+
+		private async Task RecursiveMethod(DocumentAnalyzerAggregate document, Solution solution)
+		{
+			var treeRoot = await document.SyntaxTree.GetRootAsync();
 
 			// TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
 
-			var treeRoot = await syntaxTree.GetRootAsync();
+			// If is class declaration buscar todas as classes if interface buscar interface implementations e 
+			// We're assuming each file only has a class
+			var isClass = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault() != null;
+
+			var interfaceest = treeRoot.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
+
+			if (isClass)
+			{
+
+			}
+
+			if (interfaceest != null)
+			{
+
+				var interfaceSymbol = document.SemanticModel.GetSymbolInfo(interfaceest).Symbol;				
+
+				var implementations = await SymbolFinder.FindImplementationsAsync(interfaceSymbol, solution);
+			}
 
 			var classDeclaration = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList().FirstOrDefault();
 
