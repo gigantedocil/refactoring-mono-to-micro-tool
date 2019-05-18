@@ -134,19 +134,48 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			if (interfaceest != null)
 			{
+				var interfaceImplementations = await GetInterfaceImplementations(document);
+			}
+		}
 
-				var interfaceSymbol = document.SemanticModel.GetSymbolInfo(interfaceest).Symbol;
+		public async Task<HashSet<DocumentAnalyzerAggregate>> GetInterfaceImplementations(DocumentAnalyzerAggregate interfaceDocument)
+		{
+			var implementations = new HashSet<DocumentAnalyzerAggregate>();
+			// document.SemanticModel.Compilation.GetTypeByMetadataName(document.DocumentTypeFullName);
 
-				var implementations = await SymbolFinder.FindImplementationsAsync(interfaceSymbol, solution);
+			foreach (var document in documentsRegistry)
+			{
+				var root = await document.SyntaxTree.GetRootAsync();
+
+				// We only care about classes implementing interfaces and not interfaces implementing interfaces.
+				var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+
+				if (classDeclaration != null)
+				{
+					var name = interfaceDocument.Document.Name.Split('.')[0];
+
+					var documentLines = classDeclaration.ToString().Split('\n');
+
+					var classDeclarationLine = documentLines.FirstOrDefault(x => x.Contains(name));
+
+					if (classDeclarationLine != null)
+					{
+						var classExtensions = classDeclarationLine.Split(':');
+
+						if (classExtensions.Length > 1)
+						{
+							var classExtensionsList = classExtensions[1].Split(',');
+
+							if (classExtensionsList.FirstOrDefault(x => x.Contains(name)) != null)
+							{
+								implementations.Add(document);
+							}
+						}
+					}
+				}
 			}
 
-			var classDeclaration = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().ToList().FirstOrDefault();
-
-			var list6 = new HashSet<IdentifierNameSyntax>(classDeclaration.DescendantNodes().OfType<IdentifierNameSyntax>().ToList());
-			var list7 = treeRoot.DescendantNodes().OfType<TypeSyntax>().ToList();
-
-			// If it is an interface get implementations.
-			// Otherwise search for types inside types.
+			return implementations;
 		}
 	}
 }
