@@ -27,6 +27,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             var invokedMethodDocument = await GetInvokationMethodType(solution);
 
+            documentsToCopy.Add(invokedMethodDocument);
+
             await RecursiveMethod(invokedMethodDocument);
 
             var b = "";
@@ -146,7 +148,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                         documentsToCopy.Add(interfaceImplementation);
 
                         await FindTypeDependenciesForType(interfaceImplementation);
-                    }                   
+                    }
                 }
             }
         }
@@ -167,6 +169,16 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                     case ParameterSyntax parameterSyntax:
                         typeName = parameterSyntax.Type.ToString();
                         break;
+                        //case IdentifierNameSyntax identifierNameSyntax:
+                        //    typeName = identifierNameSyntax.ToString();
+                        //    break;
+                        //case SimpleNameSyntax simpleNameSyntax:
+                        //    typeName = simpleNameSyntax.ToString();
+                        //    break;
+
+                        //case TypeSyntax typeSyntax:
+                        //    typeName = typeSyntax.ToString();
+                        //    break;
                 }
 
                 if (typeName != null)
