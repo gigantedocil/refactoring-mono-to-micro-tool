@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeAnalysisApp.Analyzer;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace CodeAnalysisApp.Refactorings.Concrete
 {
@@ -23,15 +23,33 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
         public async Task ApplyRefactoring(Solution solution)
         {
-            documentsRegistry = await InitializeDocumentRegistry(solution);
+            //documentsRegistry = await InitializeDocumentRegistry(solution);
 
-            var invokedMethodDocument = await GetInvokationMethodType(solution);
+            //var invokedMethodDocument = await GetInvokationMethodType(solution);
 
-            documentsToCopy.Add(invokedMethodDocument);
+            //documentsToCopy.Add(invokedMethodDocument);
 
-            await RecursiveMethod(invokedMethodDocument);
+            //await RecursiveMethod(invokedMethodDocument);
 
-            var b = "";
+            CreateMicroserviceDirectory();
+        }
+
+        private void CreateMicroserviceDirectory()
+        {
+            //ExecuteCommand(@"cd C:\Users\Me\Desktop && type nul > hello.txt");
+            ExecuteCommand(@"cd C:\Users\Me\Desktop && dotnet new webapi -n " + MethodName + "Microservice");
+        }
+
+        public void ExecuteCommand(string Command)
+        {
+            ProcessStartInfo ProcessInfo;
+            Process Process;
+
+            ProcessInfo = new ProcessStartInfo("cmd.exe", "/K " + Command);
+            ProcessInfo.CreateNoWindow = true;
+            ProcessInfo.UseShellExecute = true;
+
+            Process = Process.Start(ProcessInfo);
         }
 
         private async Task<HashSet<DocumentAnalyzerAggregate>> InitializeDocumentRegistry(Solution solution)
@@ -161,7 +179,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             foreach (var item in classDeclaration.DescendantNodes())
             {
-                string typeName = null;                
+                string typeName = null;
 
                 if (classDeclaration != null)
                 {
@@ -195,7 +213,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                             await RecursiveMethod(documentToCopy);
                         }
                     }
-                }                
+                }
             }
         }
 
