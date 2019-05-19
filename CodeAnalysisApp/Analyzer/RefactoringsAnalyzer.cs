@@ -33,7 +33,7 @@ namespace CodeAnalysisApp.Analyzer
 				workspace.WorkspaceFailed += (o, e) => Console.WriteLine(e.Diagnostic.Message);
 
 				// Replaced this "var solutionPath = args[0];" with the line below.
-				var solutionPath = "C:\\Users\\Findmore\\source\\repos\\MonolithDemo\\MonolithDemo.sln";
+				var solutionPath = "C:\\Users\\Me\\source\\repos\\MonolithDemo\\MonolithDemo.sln";
 				Console.WriteLine($"Loading solution '{solutionPath}'");
 
 				// Attach progress reporter so we print projects as they are loaded.

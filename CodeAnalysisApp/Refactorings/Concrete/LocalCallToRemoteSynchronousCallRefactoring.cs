@@ -9,173 +9,218 @@ using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace CodeAnalysisApp.Refactorings.Concrete
 {
-	public class LocalCallToRemoteSynchronousCallRefactoring : IRefactoringStrategy
-	{
-		private ISet<DocumentAnalyzerAggregate> documentsRegistry;
+    public class LocalCallToRemoteSynchronousCallRefactoring : IRefactoringStrategy
+    {
+        private ISet<DocumentAnalyzerAggregate> documentsRegistry;
 
-		private readonly string ProjectName = "MonolithDemo";
+        private ISet<DocumentAnalyzerAggregate> documentsToCopy = new HashSet<DocumentAnalyzerAggregate>();
 
-		private readonly string ClassName = "RoomsService.cs";
+        private readonly string ProjectName = "MonolithDemo";
 
-		private readonly string MethodName = "CalculatePrice";
+        private readonly string ClassName = "RoomsService.cs";
 
-		public async Task ApplyRefactoring(Solution solution)
-		{
-			documentsRegistry = await InitializeDocumentRegistry(solution);
+        private readonly string MethodName = "CalculatePrice";
 
-			var invokedMethodDocument = await GetInvokationMethodType(solution);
+        public async Task ApplyRefactoring(Solution solution)
+        {
+            documentsRegistry = await InitializeDocumentRegistry(solution);
 
-			await RecursiveMethod(invokedMethodDocument, solution);
-		}
+            var invokedMethodDocument = await GetInvokationMethodType(solution);
 
-		private async Task<HashSet<DocumentAnalyzerAggregate>> InitializeDocumentRegistry(Solution solution)
-		{
-			var documents = new HashSet<DocumentAnalyzerAggregate>();
+            await RecursiveMethod(invokedMethodDocument);
 
-			foreach (var project in solution.Projects)
-			{
-				foreach (var document in project.Documents)
-				{
-					documents.Add(
-						new DocumentAnalyzerAggregate()
-						{
-							Document = document,
-							SyntaxTree = await document.GetSyntaxTreeAsync(),
-							SemanticModel = await document.GetSemanticModelAsync(),
-							DocumentTypeFullName = await GetNameFromDocument(document)
-						}
-					);
-				}
-			}
+            var b = "";
+        }
 
-			return documents;
-		}
+        private async Task<HashSet<DocumentAnalyzerAggregate>> InitializeDocumentRegistry(Solution solution)
+        {
+            var documents = new HashSet<DocumentAnalyzerAggregate>();
 
-		private async Task<string> GetNameFromDocument(Document document)
-		{
-			var syntaxTree = await document.GetSyntaxTreeAsync();
+            foreach (var project in solution.Projects)
+            {
+                foreach (var document in project.Documents)
+                {
+                    documents.Add(
+                        new DocumentAnalyzerAggregate()
+                        {
+                            Document = document,
+                            SyntaxTree = await document.GetSyntaxTreeAsync(),
+                            SemanticModel = await document.GetSemanticModelAsync(),
+                            DocumentTypeFullName = await GetNameFromDocument(document)
+                        }
+                    );
+                }
+            }
 
-			var root = syntaxTree.GetRoot();
+            return documents;
+        }
 
-			string typeName = null;
+        private async Task<string> GetNameFromDocument(Document document)
+        {
+            var syntaxTree = await document.GetSyntaxTreeAsync();
 
-			string nameSpace = null;
+            var root = syntaxTree.GetRoot();
 
-			var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            string typeName = null;
 
-			if (namespaceDeclaration != null)
-			{
-				nameSpace = namespaceDeclaration.Name.ToString();
-			}
+            string nameSpace = null;
 
-			var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+            var namespaceDeclaration = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
 
-			if (classDeclaration == null)
-			{
-				var interfaceDeclaration = root.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
+            if (namespaceDeclaration != null)
+            {
+                nameSpace = namespaceDeclaration.Name.ToString();
+            }
 
-				if (interfaceDeclaration != null)
-				{
-					typeName = interfaceDeclaration.Identifier.ToString();
-				}
-			}
-			else
-			{
-				typeName = classDeclaration.Identifier.ToString();
-			}
+            var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
 
-			if (nameSpace == null || typeName == null)
-			{
-				return "";
-			}
+            if (classDeclaration == null)
+            {
+                var interfaceDeclaration = root.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
 
-			return nameSpace + "." + typeName;
-		}
+                if (interfaceDeclaration != null)
+                {
+                    typeName = interfaceDeclaration.Identifier.ToString();
+                }
+            }
+            else
+            {
+                typeName = classDeclaration.Identifier.ToString();
+            }
 
-		private async Task<DocumentAnalyzerAggregate> GetInvokationMethodType(Solution solution)
-		{
-			var project = solution.Projects.Where(p => p.Name == ProjectName).FirstOrDefault();
+            if (nameSpace == null || typeName == null)
+            {
+                return "";
+            }
 
-			var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
+            return nameSpace + "." + typeName;
+        }
 
-			var semanticModel = await document.GetSemanticModelAsync();
+        private async Task<DocumentAnalyzerAggregate> GetInvokationMethodType(Solution solution)
+        {
+            var project = solution.Projects.Where(p => p.Name == ProjectName).FirstOrDefault();
 
-			var syntaxTree = await document.GetSyntaxTreeAsync();
+            var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
 
-			var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
+            var semanticModel = await document.GetSemanticModelAsync();
 
-			var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
+            var syntaxTree = await document.GetSyntaxTreeAsync();
 
-			var invokedMethodMetadata = semanticModel.GetSymbolInfo(invokedMethod).Symbol;
+            var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
 
-			var typeFullName = invokedMethodMetadata.ContainingType.ToDisplayString();
+            var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
 
-			var invokedMethodDocument = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
+            var invokedMethodMetadata = semanticModel.GetSymbolInfo(invokedMethod).Symbol;
 
-			return invokedMethodDocument;
-		}
+            var typeFullName = invokedMethodMetadata.ContainingType.ToDisplayString();
 
-		private async Task RecursiveMethod(DocumentAnalyzerAggregate document, Solution solution)
-		{
-			var treeRoot = await document.SyntaxTree.GetRootAsync();
+            var invokedMethodDocument = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
 
-			// TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
+            return invokedMethodDocument;
+        }
 
-			// If is class declaration buscar todas as classes if interface buscar interface implementations e 
-			// We're assuming each file only has a class
-			var isClass = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault() != null;
+        private async Task RecursiveMethod(DocumentAnalyzerAggregate document)
+        {
+            var treeRoot = await document.SyntaxTree.GetRootAsync();
 
-			var interfaceest = treeRoot.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault();
+            // TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
 
-			if (isClass)
-			{
+            // If is class declaration buscar todas as classes if interface buscar interface implementations e 
+            // We're assuming each file only has a class
+            var isClass = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault() != null;
 
-			}
+            var isInterface = treeRoot.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault() != null;
 
-			if (interfaceest != null)
-			{
-				var interfaceImplementations = await GetInterfaceImplementations(document);
-			}
-		}
+            if (isClass)
+            {
+                await FindTypeDependenciesForType(document);
+            }
+            else if (isInterface)
+            {
+                var interfaceImplementations = await GetInterfaceImplementations(document);
 
-		public async Task<HashSet<DocumentAnalyzerAggregate>> GetInterfaceImplementations(DocumentAnalyzerAggregate interfaceDocument)
-		{
-			var implementations = new HashSet<DocumentAnalyzerAggregate>();
-			// document.SemanticModel.Compilation.GetTypeByMetadataName(document.DocumentTypeFullName);
+                foreach (var interfaceImplementation in interfaceImplementations)
+                {
+                    if (!documentsToCopy.Contains(interfaceImplementation))
+                    {
+                        documentsToCopy.Add(interfaceImplementation);
 
-			foreach (var document in documentsRegistry)
-			{
-				var root = await document.SyntaxTree.GetRootAsync();
+                        await FindTypeDependenciesForType(interfaceImplementation);
+                    }                   
+                }
+            }
+        }
 
-				// We only care about classes implementing interfaces and not interfaces implementing interfaces.
-				var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        private async Task FindTypeDependenciesForType(DocumentAnalyzerAggregate document)
+        {
+            var root = await document.SyntaxTree.GetRootAsync();
 
-				if (classDeclaration != null)
-				{
-					var name = interfaceDocument.Document.Name.Split('.')[0];
+            foreach (var item in root.DescendantNodes())
+            {
+                string typeName = null;
 
-					var documentLines = classDeclaration.ToString().Split('\n');
+                switch (item)
+                {
+                    case SimpleBaseTypeSyntax simpleBaseTypeSyntax:
+                        typeName = simpleBaseTypeSyntax.Type.ToString();
+                        break;
+                    case ParameterSyntax parameterSyntax:
+                        typeName = parameterSyntax.Type.ToString();
+                        break;
+                }
 
-					var classDeclarationLine = documentLines.FirstOrDefault(x => x.Contains(name));
+                if (typeName != null)
+                {
+                    var documentToCopy = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName.Contains(typeName));
 
-					if (classDeclarationLine != null)
-					{
-						var classExtensions = classDeclarationLine.Split(':');
+                    if (documentToCopy != null && !documentsToCopy.Contains(documentToCopy))
+                    {
+                        documentsToCopy.Add(documentToCopy);
 
-						if (classExtensions.Length > 1)
-						{
-							var classExtensionsList = classExtensions[1].Split(',');
+                        await RecursiveMethod(documentToCopy);
+                    }
+                }
+            }
+        }
 
-							if (classExtensionsList.FirstOrDefault(x => x.Contains(name)) != null)
-							{
-								implementations.Add(document);
-							}
-						}
-					}
-				}
-			}
+        private async Task<HashSet<DocumentAnalyzerAggregate>> GetInterfaceImplementations(DocumentAnalyzerAggregate interfaceDocument)
+        {
+            var implementations = new HashSet<DocumentAnalyzerAggregate>();
+            // document.SemanticModel.Compilation.GetTypeByMetadataName(document.DocumentTypeFullName);
 
-			return implementations;
-		}
-	}
+            foreach (var document in documentsRegistry)
+            {
+                var root = await document.SyntaxTree.GetRootAsync();
+
+                // We only care about classes implementing interfaces and not interfaces implementing interfaces.
+                var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+
+                if (classDeclaration != null)
+                {
+                    var name = interfaceDocument.Document.Name.Split('.')[0];
+
+                    var documentLines = classDeclaration.ToString().Split('\n');
+
+                    var classDeclarationLine = documentLines.FirstOrDefault(x => x.Contains(name));
+
+                    if (classDeclarationLine != null)
+                    {
+                        var classExtensions = classDeclarationLine.Split(':');
+
+                        if (classExtensions.Length > 1)
+                        {
+                            var classExtensionsList = classExtensions[1].Split(',');
+
+                            if (classExtensionsList.FirstOrDefault(x => x.Contains(name)) != null)
+                            {
+                                implementations.Add(document);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return implementations;
+        }
+    }
 }

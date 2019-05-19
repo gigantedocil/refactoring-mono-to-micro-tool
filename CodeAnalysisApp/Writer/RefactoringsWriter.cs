@@ -10,8 +10,8 @@ namespace CodeAnalysisApp.Writer
 		private readonly string methodName = "";
 		private readonly string wrapperMethodName = "GetRoomPricing";
 		private readonly string wrapperMethodSignature = "public float GetRoomPricing(int roomId)";
-		private readonly string fileReadLocation = @"C:\Users\Findmore\Desktop\RoomsService.cs";
-		private readonly string fileWriteLocation = @"C:\Users\Findmore\Desktop\RoomsDemoService.cs";
+		private readonly string fileReadLocation = @"C:\Users\Me\Desktop\RoomsService.cs";
+		private readonly string fileWriteLocation = @"C:\Users\Me\Desktop\RoomsDemoService.cs";
 
 		public void BeginWriting()
 		{
