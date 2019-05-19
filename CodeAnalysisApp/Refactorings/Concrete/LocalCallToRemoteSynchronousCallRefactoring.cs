@@ -157,41 +157,45 @@ namespace CodeAnalysisApp.Refactorings.Concrete
         {
             var root = await document.SyntaxTree.GetRootAsync();
 
-            foreach (var item in root.DescendantNodes())
+            var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+
+            foreach (var item in classDeclaration.DescendantNodes())
             {
-                string typeName = null;
+                string typeName = null;                
 
-                switch (item)
+                if (classDeclaration != null)
                 {
-                    case SimpleBaseTypeSyntax simpleBaseTypeSyntax:
-                        typeName = simpleBaseTypeSyntax.Type.ToString();
-                        break;
-                    case ParameterSyntax parameterSyntax:
-                        typeName = parameterSyntax.Type.ToString();
-                        break;
-                        //case IdentifierNameSyntax identifierNameSyntax:
-                        //    typeName = identifierNameSyntax.ToString();
-                        //    break;
-                        //case SimpleNameSyntax simpleNameSyntax:
-                        //    typeName = simpleNameSyntax.ToString();
-                        //    break;
-
-                        //case TypeSyntax typeSyntax:
-                        //    typeName = typeSyntax.ToString();
-                        //    break;
-                }
-
-                if (typeName != null)
-                {
-                    var documentToCopy = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName.Contains(typeName));
-
-                    if (documentToCopy != null && !documentsToCopy.Contains(documentToCopy))
+                    switch (item)
                     {
-                        documentsToCopy.Add(documentToCopy);
-
-                        await RecursiveMethod(documentToCopy);
+                        case SimpleBaseTypeSyntax simpleBaseTypeSyntax:
+                            typeName = simpleBaseTypeSyntax.Type.ToString();
+                            break;
+                        case ParameterSyntax parameterSyntax:
+                            typeName = parameterSyntax.Type.ToString();
+                            break;
+                        case IdentifierNameSyntax identifierNameSyntax:
+                            typeName = identifierNameSyntax.ToString();
+                            break;
+                        case SimpleNameSyntax simpleNameSyntax:
+                            typeName = simpleNameSyntax.ToString();
+                            break;
+                        case TypeSyntax typeSyntax:
+                            typeName = typeSyntax.ToString();
+                            break;
                     }
-                }
+
+                    if (typeName != null)
+                    {
+                        var documentToCopy = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName.Contains(typeName));
+
+                        if (documentToCopy != null && !documentsToCopy.Contains(documentToCopy))
+                        {
+                            documentsToCopy.Add(documentToCopy);
+
+                            await RecursiveMethod(documentToCopy);
+                        }
+                    }
+                }                
             }
         }
 
