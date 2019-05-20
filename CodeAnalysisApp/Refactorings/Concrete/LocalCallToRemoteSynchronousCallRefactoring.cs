@@ -46,7 +46,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
             {
                 ExecuteCommand(@"cd " + MicroserviceDirectoryPath + " && dotnet new webapi -n " + MethodName + "Microservice && exit");
             }
-                       
+
             Directory.CreateDirectory(sourcePath);
 
             if (Directory.Exists(sourcePath))
@@ -171,10 +171,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
         {
             var treeRoot = await document.SyntaxTree.GetRootAsync();
 
-            // TODO: Get syntax tree of type so I can get all classes of that file and do that recursively.
-
-            // If is class declaration buscar todas as classes if interface buscar interface implementations e 
-            // We're assuming each file only has a class
+            // We're assuming only one class per file.
             var isClass = treeRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault() != null;
 
             var isInterface = treeRoot.DescendantNodes().OfType<InterfaceDeclarationSyntax>().FirstOrDefault() != null;
@@ -248,7 +245,6 @@ namespace CodeAnalysisApp.Refactorings.Concrete
         private async Task<HashSet<DocumentAnalyzerAggregate>> GetInterfaceImplementations(DocumentAnalyzerAggregate interfaceDocument)
         {
             var implementations = new HashSet<DocumentAnalyzerAggregate>();
-            // document.SemanticModel.Compilation.GetTypeByMetadataName(document.DocumentTypeFullName);
 
             foreach (var document in documentsRegistry)
             {
