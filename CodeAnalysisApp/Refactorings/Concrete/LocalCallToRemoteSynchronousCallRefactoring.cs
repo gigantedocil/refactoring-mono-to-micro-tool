@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeAnalysisApp.Analyzer;
@@ -21,35 +23,61 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
         private readonly string MethodName = "CalculatePrice";
 
+        private readonly string MicroserviceDirectoryPath = @"C:\Users\Me\Desktop";
+
         public async Task ApplyRefactoring(Solution solution)
         {
-            //documentsRegistry = await InitializeDocumentRegistry(solution);
+            documentsRegistry = await InitializeDocumentRegistry(solution);
 
-            //var invokedMethodDocument = await GetInvokationMethodType(solution);
+            var invokedMethodDocument = await GetInvokationMethodType(solution);
 
-            //documentsToCopy.Add(invokedMethodDocument);
+            documentsToCopy.Add(invokedMethodDocument);
 
-            //await RecursiveMethod(invokedMethodDocument);
+            await RecursiveMethod(invokedMethodDocument);
 
             CreateMicroserviceDirectory();
         }
 
         private void CreateMicroserviceDirectory()
         {
-            //ExecuteCommand(@"cd C:\Users\Me\Desktop && type nul > hello.txt");
-            ExecuteCommand(@"cd C:\Users\Me\Desktop && dotnet new webapi -n " + MethodName + "Microservice");
+            var sourcePath = MicroserviceDirectoryPath + "\\" + MethodName + "Microservice\\Source";
+
+            if (!Directory.Exists(sourcePath))
+            {
+                ExecuteCommand(@"cd " + MicroserviceDirectoryPath + " && dotnet new webapi -n " + MethodName + "Microservice && exit");
+            }
+                       
+            Directory.CreateDirectory(sourcePath);
+
+            if (Directory.Exists(sourcePath))
+            {
+                foreach (var document in documentsToCopy)
+                {
+                    var path = document.Document.FilePath;
+
+                    if (File.Exists(path))
+                    {
+                        var fileName = document.Document.FilePath.Split('\\').LastOrDefault();
+
+                        File.Copy(path, sourcePath + "\\" + fileName);
+                    }
+                }
+            }
         }
 
-        public void ExecuteCommand(string Command)
+        private void ExecuteCommand(string command)
         {
-            ProcessStartInfo ProcessInfo;
-            Process Process;
+            ProcessStartInfo processInfo;
 
-            ProcessInfo = new ProcessStartInfo("cmd.exe", "/K " + Command);
-            ProcessInfo.CreateNoWindow = true;
-            ProcessInfo.UseShellExecute = true;
+            processInfo = new ProcessStartInfo("cmd.exe", "/K " + command)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
 
-            Process = Process.Start(ProcessInfo);
+            var process = Process.Start(processInfo);
+
+            process.WaitForExit();
         }
 
         private async Task<HashSet<DocumentAnalyzerAggregate>> InitializeDocumentRegistry(Solution solution)
