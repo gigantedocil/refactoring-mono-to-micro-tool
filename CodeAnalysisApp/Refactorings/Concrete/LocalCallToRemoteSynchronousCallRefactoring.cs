@@ -16,6 +16,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
         private ISet<DocumentAnalyzerAggregate> documentsToCopy = new HashSet<DocumentAnalyzerAggregate>();
 
+        private DocumentAnalyzerAggregate startup;
+
         private readonly string ProjectName = "MonolithDemo";
 
         private readonly string ClassName = "RoomsService.cs";
@@ -34,12 +36,17 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             await RecursiveMethod(invokedMethodDocument);
 
-            CreateMicroserviceDirectory();
+            var invokedMethodProjectName = invokedMethodDocument.DocumentTypeFullName.Split('.').FirstOrDefault();
+
+            startup = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName.Contains(invokedMethodProjectName + ".Startup"));
+
+            CreateMicroserviceDirectory();           
         }
 
         private void CreateMicroserviceDirectory()
         {
-            var sourcePath = MicroserviceDirectoryPath + "\\" + MethodName + "Microservice\\Source";
+            var basePath = MicroserviceDirectoryPath + "\\" + MethodName + "Microservice";
+            var sourcePath = basePath + "\\Source";
 
             if (!Directory.Exists(sourcePath))
             {
@@ -54,14 +61,27 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                 {
                     var path = document.Document.FilePath;
 
-                    if (File.Exists(path))
-                    {
-                        var fileName = document.Document.FilePath.Split('\\').LastOrDefault();
+                    var fileName = document.Document.FilePath.Split('\\').LastOrDefault();
 
-                        File.Copy(path, sourcePath + "\\" + fileName);
+                    var newPath = sourcePath + "\\" + fileName;
+
+                    if (File.Exists(path) && !File.Exists(newPath))
+                    {
+                        File.Copy(path, newPath);
                     }
                 }
             }
+
+            var startupPath = basePath + "\\Startup.cs";
+
+            if (File.Exists(startupPath))
+            {
+                File.Delete(basePath + "\\Startup.cs");
+            }
+
+            File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");        
+            
+
         }
 
         private void ExecuteCommand(string command)
