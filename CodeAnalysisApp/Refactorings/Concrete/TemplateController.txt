@@ -1,0 +1,25 @@
+﻿using {serviceNamespace};
+using Microsoft.AspNetCore.Mvc;
+
+namespace {newNamespace}.Controllers
+{    
+    [ApiController]
+    [Route("api/[controller]")]
+    public class {controllerName}Controller : ControllerBase
+    {
+        private readonly {serviceType} {serviceParameterName};
+
+        public {serviceName}Controller(
+            {serviceType} {serviceParameterName})
+        {
+            this.{serviceParameterName} = {serviceParameterName};
+        }
+
+        [HttpPost("{MethodName}")]
+        public IActionResult {calledMethodName}([FromBody] {inboundParameterType} {inboundParameterName})
+        {
+            var result = {serviceParameterName}.{calledMethodName}({inboundParameterName});
+            return Ok(result);
+        }
+    }
+}

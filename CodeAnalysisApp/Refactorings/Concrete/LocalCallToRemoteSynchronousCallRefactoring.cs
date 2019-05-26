@@ -18,6 +18,10 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
         private DocumentAnalyzerAggregate startup;
 
+        private DocumentAnalyzerAggregate invokedMethodDocument;
+
+        private string invokedMethodName;
+
         private readonly string ProjectName = "MonolithDemo";
 
         private readonly string ClassName = "RoomsService.cs";
@@ -30,7 +34,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
         {
             documentsRegistry = await InitializeDocumentRegistry(solution);
 
-            var invokedMethodDocument = await GetInvokationMethodType(solution);
+            invokedMethodDocument = await GetInvokationMethodType(solution);
 
             documentsToCopy.Add(invokedMethodDocument);
 
@@ -40,7 +44,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             startup = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName.Contains(invokedMethodProjectName + ".Startup"));
 
-            CreateMicroserviceDirectory();           
+            CreateMicroserviceDirectory();
         }
 
         private void CreateMicroserviceDirectory()
@@ -79,9 +83,56 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                 File.Delete(basePath + "\\Startup.cs");
             }
 
-            File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");        
-            
+            File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");
 
+            var test = invokedMethodDocument;
+
+            var controllerName = invokedMethodDocument.Document.Name.First() == 'I' ? 
+                invokedMethodDocument.Document.Name.Split('I').ElementAt(1).Replace("Service", "") : 
+                invokedMethodDocument.Document.Name.Replace("Service", "");
+
+            AddController(
+                invokedMethodDocument.DocumentTypeFullName,
+                MethodName + "Microservice.Controllers",
+                controllerName,
+                invokedMethodDocument.Document.Name.Split('.').FirstOrDefault(),
+                invokedMethodDocument.Document.Name.Split('.').FirstOrDefault().ToLowerInvariant(),
+                invokedMethodDocument.Document.Name,
+                invokedMethodName,
+                "",
+                invokedMethodName,
+                basePath
+            );
+        }
+
+        private void AddController(
+            string serviceNamespace,
+            string newNamespace,
+            string controllerName,
+            string serviceType,
+            string serviceParameterName,
+            string serviceName,
+            string methodName,
+            string inboundParameterType,
+            string calledMethodName,
+            string path)
+        {
+            var controllerPath = path + @"\Controllers\CalculatePricingController.cs";
+
+            var templateControllerFile = File.ReadAllText(Directory.GetCurrentDirectory() + @"\Refactorings\Concrete\TemplateController.txt");
+
+            var controllerFile = templateControllerFile
+                .Replace("{serviceNamespace}", serviceName)
+                .Replace("{newNamespace}", newNamespace)
+                .Replace("{controllerName}", controllerName)
+                .Replace("{serviceType}", serviceType)
+                .Replace("{serviceParameterName}", serviceParameterName)
+                .Replace("{serviceName}", serviceName)
+                .Replace("{methodName}", methodName)
+                .Replace("{inboundParameterType}", inboundParameterType)
+                .Replace("{calledMethodName}", calledMethodName);
+
+            File.AppendAllText(controllerPath, controllerFile);
         }
 
         private void ExecuteCommand(string command)
@@ -173,15 +224,21 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             var syntaxTree = await document.GetSyntaxTreeAsync();
 
-            var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
+            var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();            
 
-            var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
+            var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));                              
 
             var invokedMethodMetadata = semanticModel.GetSymbolInfo(invokedMethod).Symbol;
+
+            invokedMethodName = invokedMethodMetadata.Name;
 
             var typeFullName = invokedMethodMetadata.ContainingType.ToDisplayString();
 
             var invokedMethodDocument = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
+
+            var aula = invokedMethodDocument.SyntaxTree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(x => x.ToString().Contains(MethodName));
+
+            var test = aula.ParameterList;
 
             return invokedMethodDocument;
         }
