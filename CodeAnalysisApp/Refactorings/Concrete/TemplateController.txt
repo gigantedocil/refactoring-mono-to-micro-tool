@@ -15,11 +15,16 @@ namespace {newNamespace}.Controllers
             this.{serviceParameterName} = {serviceParameterName};
         }
 
-        [HttpPost("{MethodName}")]
-        public IActionResult {calledMethodName}([FromBody] {inboundParameterType} {inboundParameterName})
+        [HttpPost("{methodName}")]
+        public IActionResult {methodName}([FromBody] RequestData requestData)
         {
             var result = {serviceParameterName}.{calledMethodName}({inboundParameterName});
             return Ok(result);
         }
     }
+
+	public class RequestData
+	{
+{parameters}
+	}
 }
