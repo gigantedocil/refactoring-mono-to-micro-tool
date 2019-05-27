@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -49,10 +50,20 @@ namespace CodeAnalysisApp.Refactorings.Concrete
             CreateMicroserviceDirectory();
         }
 
+        private string sourcePath;
+
+        private string microserviceName;
+
+        private string microserviceSourceNamespace;
+
         private void CreateMicroserviceDirectory()
         {
-            var basePath = MicroserviceDirectoryPath + "\\" + MethodName + "Microservice";
-            var sourcePath = basePath + "\\Source";
+            microserviceName = MethodName + "Microservice";
+
+            microserviceSourceNamespace = microserviceName + ".Source";
+
+            var basePath = MicroserviceDirectoryPath + "\\" + microserviceName;
+            sourcePath = basePath + "\\Source";
 
             if (!Directory.Exists(sourcePath))
             {
@@ -85,11 +96,12 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                 File.Delete(basePath + "\\Startup.cs");
             }
 
-            File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");            
+            File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");
 
+            // Copy this inside the AddController method.
             var controllerName = invokedMethodDocument.Document.Name.First() == 'I' ?
                 invokedMethodDocument.Document.Name.Split('I').ElementAt(1).Replace("Service", "").Split('.').FirstOrDefault() :
-                invokedMethodDocument.Document.Name.Replace("Service", "").Split('.').FirstOrDefault();            
+                invokedMethodDocument.Document.Name.Replace("Service", "").Split('.').FirstOrDefault();
 
             AddController(
                 invokedMethodDocument.DocumentTypeFullName,
@@ -103,6 +115,31 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                 invokedMethodName,
                 basePath
             );
+
+            ReplaceNamespace();
+        }
+
+        private void ReplaceNamespace()
+        {
+            if (Directory.Exists(sourcePath))
+            {
+                var files = Directory.GetFiles(sourcePath);
+
+                foreach (var filePath in files)
+                {
+                    var fileContentLines = new List<string>(File.ReadAllLines(filePath));
+
+                    var namespaceIndex = fileContentLines.FindIndex(line => line.Contains("namespace"));
+
+                    fileContentLines.RemoveAt(namespaceIndex);
+
+                    fileContentLines.Insert(namespaceIndex, "namespace " + microserviceSourceNamespace);
+
+                    var fileContent = string.Join("\n", fileContentLines);
+
+                    File.WriteAllText(filePath, fileContent);
+                }
+            }
         }
 
         private void AddController(
@@ -129,7 +166,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             for (int i = 0; i < list.Count(); i++)
             {
-                var item = list.ElementAt(i);                
+                var item = list.ElementAt(i);
 
                 if (i == (list.Count() - 1))
                 {
@@ -140,8 +177,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                 {
                     requestData += $"\t\tpublic {item} {{ get; set; }}\n";
                     methodCall += "requestData." + item.Split(' ').ElementAt(1) + ", ";
-                    
-                }                
+                }
             }
 
             var controllerFile = templateControllerFile
@@ -163,7 +199,6 @@ namespace CodeAnalysisApp.Refactorings.Concrete
             }
 
             File.AppendAllText(controllerPath, controllerFile);
-            
         }
 
         private void ExecuteCommand(string command)
@@ -269,7 +304,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
             invokedMethodParameters = invokedMethodDocument.SyntaxTree.GetRoot()
                 .DescendantNodes().OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(x => x.ToString().Contains(MethodName)).ParameterList;            
+                .FirstOrDefault(x => x.ToString().Contains(MethodName)).ParameterList;
 
             return invokedMethodDocument;
         }
