@@ -104,7 +104,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
                 invokedMethodDocument.Document.Name.Replace("Service", "").Split('.').FirstOrDefault();
 
             AddController(
-                invokedMethodDocument.DocumentTypeFullName,
+                microserviceSourceNamespace,
                 MethodName + "Microservice",
                 controllerName,
                 invokedMethodDocument.Document.Name.Split('.').FirstOrDefault(),
@@ -181,7 +181,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
             }
 
             var controllerFile = templateControllerFile
-                .Replace("{serviceNamespace}", serviceName)
+                .Replace("{serviceNamespace}", serviceNamespace)
                 .Replace("{newNamespace}", newNamespace)
                 .Replace("{controllerName}", controllerName)
                 .Replace("{serviceType}", serviceType)

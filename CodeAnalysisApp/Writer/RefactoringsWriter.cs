@@ -20,7 +20,7 @@ namespace CodeAnalysisApp.Writer
             WriteUsings(lines);
             WriteFields(lines);
             WriteConstructor(lines);
-            WriteMethodSignature(lines);
+            //WriteMethodSignature(lines);
             WriteMethod(lines);
 
             var file = string.Join("\n", lines);
@@ -30,10 +30,10 @@ namespace CodeAnalysisApp.Writer
 
         private void WriteUsings(List<string> lines)
         {
-            if (lines.FindIndex(l => l.Contains("using System.Threading.Tasks;")) == -1)
-            {
-                lines.Insert(0, "using System.Threading.Tasks;");
-            }
+            //if (lines.FindIndex(l => l.Contains("using System.Threading.Tasks;")) == -1)
+            //{
+            //    lines.Insert(0, "using System.Threading.Tasks;");
+            //}
 
             if (lines.FindIndex(l => l.Contains("using Newtonsoft.Json;")) == -1)
             {
@@ -87,8 +87,8 @@ namespace CodeAnalysisApp.Writer
         {
             int index = lines.FindIndex(l => l.Contains("var roomPrice =  pricingService.CalculatePrice(roomType);"));
 
-            lines.Insert(index, "\t\t\tvar roomPrice = await response.Content.ReadAsAsync<float>();");
-            lines.Insert(index, "\t\t\tvar response = await httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\"));");
+            lines.Insert(index, "\t\t\tvar roomPrice = response.Content.ReadAsAsync<float>().Result;");
+            lines.Insert(index, "\t\t\tvar response = httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\")).Result;");
             lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(roomType);");
             lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/CalculatePrice\";");
             lines.RemoveAt(index + 4);

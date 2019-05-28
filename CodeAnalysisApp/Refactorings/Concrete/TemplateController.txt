@@ -9,7 +9,7 @@ namespace {newNamespace}.Controllers
     {
         private readonly {serviceType} {serviceParameterName};
 
-        public {serviceName}Controller(
+        public {controllerName}Controller(
             {serviceType} {serviceParameterName})
         {
             this.{serviceParameterName} = {serviceParameterName};
