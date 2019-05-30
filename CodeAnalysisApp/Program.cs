@@ -1,5 +1,4 @@
 using CodeAnalysisApp.Analyzer;
-using CodeAnalysisApp.Writer;
 using System.Threading.Tasks;
 
 namespace CodeAnalysisApp
@@ -8,8 +7,7 @@ namespace CodeAnalysisApp
 	{
 		static async Task Main(string[] args)
 		{
-			await new RefactoringsAnalyzer().BeginAnalysis();
-			new RefactoringsWriter().BeginWriting();
+			await new RefactoringsAnalyzer().BeginAnalysis();			
 		}
 	}
 }

@@ -32,11 +32,13 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		private string microserviceSourceNamespace;
 
+		private string requestData;
+
 		// Input fields for existing project.
 
 		private readonly string microserviceApplicationUrl = "pricingServiceApplicationUrl";
 
-		private readonly string microserviceConfigurationKey = "PricingMicroservice";		
+		private readonly string microserviceConfigurationKey = "PricingMicroservice";
 
 		private readonly string wrapperMethodName = "GetRoomPricing";
 
@@ -71,6 +73,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			startup = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName.Contains(invokedMethodProjectName + ".Startup"));
 
 			CreateMicroserviceDirectory();
+
+			BeginWriting();
 		}
 
 		private void CreateMicroserviceDirectory()
@@ -251,8 +255,6 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			var controllerPath = path + @"\Controllers\CalculatePricingController.cs";
 
 			var templateControllerFile = File.ReadAllText(Directory.GetCurrentDirectory() + @"\Refactorings\Concrete\TemplateController.txt");
-
-			var requestData = "";
 
 			var methodCall = "";
 
@@ -523,10 +525,13 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			WriteUsings(lines);
 			WriteFields(lines);
-			WriteConstructor(lines);			
+			WriteConstructor(lines);
 			WriteMethod(lines);
+			WriteRequestDataClass(lines);
 
 			var file = string.Join("\n", lines);
+
+			file = file.Replace("{requestData}", requestData);
 
 			File.WriteAllText(fileWriteLocation, file);
 		}
@@ -568,10 +573,11 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 					break;
 				}
 			}
-		}		
+		}
 
 		private void WriteMethod(List<string> lines)
 		{
+			// TODO: We need to change how we find the method.
 			int index = lines.FindIndex(l => l.Contains("var roomPrice =  pricingService.CalculatePrice(roomType);"));
 
 			lines.Insert(index, "\t\t\tvar roomPrice = response.Content.ReadAsAsync<float>().Result;");
@@ -579,6 +585,13 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(roomType);");
 			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/CalculatePrice\";");
 			lines.RemoveAt(index + 4);
+		}
+
+		private void WriteRequestDataClass(List<string> lines)
+		{
+			int index = lines.LastIndexOf("}");
+
+			lines.Insert(index, "\n\tpublic class RequestData\n\t{\n{requestData}\n\t}");
 		}
 	}
 }
