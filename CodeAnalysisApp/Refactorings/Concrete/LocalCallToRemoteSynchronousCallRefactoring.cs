@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -37,9 +36,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		private readonly string microserviceApplicationUrl = "pricingServiceApplicationUrl";
 
-		private readonly string microserviceConfigurationKey = "PricingMicroservice";
-
-		private readonly string methodName = "";
+		private readonly string microserviceConfigurationKey = "PricingMicroservice";		
 
 		private readonly string wrapperMethodName = "GetRoomPricing";
 
@@ -51,13 +48,13 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		// Input fields for generated project.
 
-		private readonly string ProjectName = "MonolithDemo";
+		private readonly string projectName = "MonolithDemo";
 
-		private readonly string ClassName = "RoomsService.cs";
+		private readonly string className = "RoomsService.cs";
 
-		private readonly string MethodName = "CalculatePrice";
+		private readonly string methodName = "CalculatePrice";
 
-		private readonly string MicroserviceDirectoryPath = @"C:\Users\Me\Desktop";
+		private readonly string microserviceDirectoryPath = @"C:\Users\Me\Desktop";
 
 		public async Task ApplyRefactoring(Solution solution)
 		{
@@ -78,16 +75,16 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		private void CreateMicroserviceDirectory()
 		{
-			microserviceName = MethodName + "Microservice";
+			microserviceName = methodName + "Microservice";
 
 			microserviceSourceNamespace = microserviceName + ".Source";
 
-			var basePath = MicroserviceDirectoryPath + "\\" + microserviceName;
+			var basePath = microserviceDirectoryPath + "\\" + microserviceName;
 			sourcePath = basePath + "\\Source";
 
 			if (!Directory.Exists(sourcePath))
 			{
-				ExecuteCommand(@"cd " + MicroserviceDirectoryPath + " && dotnet new webapi -n " + MethodName + "Microservice && exit");
+				ExecuteCommand(@"cd " + microserviceDirectoryPath + " && dotnet new webapi -n " + methodName + "Microservice && exit");
 			}
 
 			Directory.CreateDirectory(sourcePath);
@@ -118,7 +115,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			AddController(
 				microserviceSourceNamespace,
-				MethodName + "Microservice",
+				methodName + "Microservice",
 				controllerName,
 				invokedMethodDocument.Document.Name.Split('.').FirstOrDefault(),
 				invokedMethodDocument.Document.Name.Split('.').FirstOrDefault().ToLowerInvariant(),
@@ -147,9 +144,9 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			{
 				var fileContentLines = new List<string>(File.ReadAllLines(startupPath));
 
-				while (fileContentLines.FindIndex(fileLine => fileLine.Contains("using " + ProjectName)) != -1)
+				while (fileContentLines.FindIndex(fileLine => fileLine.Contains("using " + projectName)) != -1)
 				{
-					var index = fileContentLines.FindIndex(fileLine => fileLine.Contains("using " + ProjectName));
+					var index = fileContentLines.FindIndex(fileLine => fileLine.Contains("using " + projectName));
 
 					fileContentLines.RemoveAt(index);
 				}
@@ -379,9 +376,9 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		private async Task<DocumentAnalyzerAggregate> GetInvokationMethodType(Solution solution)
 		{
-			var project = solution.Projects.Where(p => p.Name == ProjectName).FirstOrDefault();
+			var project = solution.Projects.Where(p => p.Name == projectName).FirstOrDefault();
 
-			var document = project.Documents.Where(d => d.Name == ClassName).FirstOrDefault();
+			var document = project.Documents.Where(d => d.Name == className).FirstOrDefault();
 
 			var semanticModel = await document.GetSemanticModelAsync();
 
@@ -389,7 +386,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			var methodInvocations = syntaxTree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>();
 
-			var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(MethodName));
+			var invokedMethod = methodInvocations.FirstOrDefault(x => x.ToString().Contains(methodName));
 
 			var invokedMethodMetadata = semanticModel.GetSymbolInfo(invokedMethod).Symbol;
 
@@ -401,7 +398,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			invokedMethodParameters = invokedMethodDocument.SyntaxTree.GetRoot()
 				.DescendantNodes().OfType<MethodDeclarationSyntax>()
-				.FirstOrDefault(x => x.ToString().Contains(MethodName)).ParameterList;
+				.FirstOrDefault(x => x.ToString().Contains(methodName)).ParameterList;
 
 			return invokedMethodDocument;
 		}
