@@ -39,15 +39,19 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		private string invokedMethodReturnType;
 
+		private string applicationUrl;
+
+		private string controllerName;
+
 		// Input fields for existing project.
 
 		private readonly string microserviceApplicationUrl = "pricingServiceApplicationUrl";
 
 		private readonly string microserviceConfigurationKey = "PricingMicroservice";
 
-		private readonly string wrapperMethodName = "GetRoomPricing";
+		//private readonly string wrapperMethodName = "GetRoomPricing";
 
-		private readonly string wrapperMethodSignature = "public float GetRoomPricing(int roomId)";
+		//private readonly string wrapperMethodSignature = "public float GetRoomPricing(int roomId)";
 
 		private readonly string fileReadLocation = @"C:\Users\Me\Desktop\RoomsService.cs";
 
@@ -117,8 +121,10 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			CopyStartup(basePath, microserviceSourceNamespace);
 
-			// Copy this inside the AddController method.
-			var controllerName = invokedMethodDocument.Document.Name.First() == 'I' ?
+			GetMicroserviceUrl(basePath, microserviceSourceNamespace);
+
+			// TODO: Copy this inside the AddController method.
+			controllerName = invokedMethodDocument.Document.Name.First() == 'I' ?
 				invokedMethodDocument.Document.Name.Split('I').ElementAt(1).Replace("Service", "").Split('.').FirstOrDefault() :
 				invokedMethodDocument.Document.Name.Replace("Service", "").Split('.').FirstOrDefault();
 
@@ -136,6 +142,27 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			);
 
 			ReplaceNamespace();
+		}
+
+		private void GetMicroserviceUrl(string basePath, string microserviceSourceNamespace)
+		{
+			var launchSettingsJsonPath = basePath + "\\Properties\\launchSettings.json";
+
+			if (File.Exists(launchSettingsJsonPath))
+			{
+				File.Delete(basePath + "\\Startup.cs");
+			}
+
+			File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");
+
+			if (File.Exists(launchSettingsJsonPath))
+			{
+				var fileContentLines = new List<string>(File.ReadAllLines(launchSettingsJsonPath));
+
+				var applicationUrlLine = fileContentLines.Where(x => x.Contains("applicationUrl")).ElementAt(1);
+
+				applicationUrl = applicationUrlLine.Split(';').LastOrDefault().Replace("\",", "");
+			}
 		}
 
 		private void CopyStartup(string basePath, string microserviceSourceNamespace)
@@ -551,13 +578,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		public void BeginWriting()
 		{
-			var lines = new List<string>(File.ReadAllLines(fileReadLocation));
-
-			//var fileName = fileReadLocation.Split('\\').LastOrDefault();
-
-			//var aggregateDocument = documentsRegistry.FirstOrDefault(aggregate => aggregate.Document.Name == fileName);
-
-			//aggregateDocument.SyntaxTree.GetRoot().DescendantNodes().OfType<MethodSyntax>()
+			var lines = new List<string>(File.ReadAllLines(fileReadLocation));			
 
 			WriteUsings(lines);
 			WriteFields(lines);
@@ -607,7 +628,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				if (lines[i].Contains("{"))
 				{
 					lines.Insert(i + 1, "\t\t\thttpClient = clientFactory.CreateClient();");
-					lines.Insert(i + 1, $"\t\t\tpricingServiceApplicationUrl = configuration[\"{microserviceConfigurationKey}:ApplicationUrl\"];");
+					lines.Insert(i + 1, $"\t\t\tpricingServiceApplicationUrl = " + applicationUrl + ";");
 					break;
 				}
 			}
@@ -622,7 +643,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			lines.Insert(index, "\t\t\tvar response = httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\")).Result;");
 			lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(requestData);");
 			lines.Insert(index, "\t\t\t{requestDataObject}");
-			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/CalculatePrice\";");
+			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \""+ controllerName + "/" + methodName + "\";");
 			lines.RemoveAt(index + 5);
 		}
 
