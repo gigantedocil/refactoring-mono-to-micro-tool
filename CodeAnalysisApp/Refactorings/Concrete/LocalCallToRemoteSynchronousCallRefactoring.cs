@@ -13,7 +13,6 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 	public class LocalCallToRemoteSynchronousCallRefactoring : IRefactoringStrategy
 	{
 		// Class fields.
-
 		private ISet<DocumentAnalyzerAggregate> documentsRegistry;
 
 		private ISet<DocumentAnalyzerAggregate> documentsToCopy = new HashSet<DocumentAnalyzerAggregate>();
@@ -33,6 +32,12 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		private string microserviceSourceNamespace;
 
 		private string requestData;
+
+		private string requestDataCallObject;
+
+		private SeparatedSyntaxList<ArgumentSyntax> invokedMethodArguments;
+
+		private string invokedMethodReturnType;
 
 		// Input fields for existing project.
 
@@ -276,6 +281,25 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				}
 			}
 
+			requestDataCallObject = "var requestData = new RequestData() {\n";
+
+			var arguments = invokedMethodArguments.Select(x => x.Expression.ToString());
+
+			for (int i = 0; i < list.Count(); i++)
+			{
+				var item = list.ElementAt(i);
+
+				if (i == (list.Count() - 1))
+				{
+					requestDataCallObject += "\t\t\t\t" + item.Split(' ').LastOrDefault() + " = " + invokedMethodArguments[i] + "\n";
+					requestDataCallObject += "\t\t\t}\n";
+				}
+				else
+				{
+					requestDataCallObject += "\t\t\t\t" + item.Split(' ').LastOrDefault() + " = " + invokedMethodArguments[i] + ",\n";
+				}
+			}
+
 			var controllerFile = templateControllerFile
 				.Replace("{serviceNamespace}", serviceNamespace)
 				.Replace("{newNamespace}", newNamespace)
@@ -392,11 +416,17 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			var invokedMethodMetadata = semanticModel.GetSymbolInfo(invokedMethod).Symbol;
 
+			invokedMethodArguments = invokedMethod.ArgumentList.Arguments;
+
 			invokedMethodName = invokedMethodMetadata.Name;
 
 			var typeFullName = invokedMethodMetadata.ContainingType.ToDisplayString();
 
 			var invokedMethodDocument = documentsRegistry.FirstOrDefault(x => x.DocumentTypeFullName == typeFullName);
+
+			invokedMethodReturnType = invokedMethodDocument.SyntaxTree.GetRoot()
+				.DescendantNodes().OfType<MethodDeclarationSyntax>()
+				.FirstOrDefault(x => x.ToString().Contains(methodName)).ReturnType.ToString();
 
 			invokedMethodParameters = invokedMethodDocument.SyntaxTree.GetRoot()
 				.DescendantNodes().OfType<MethodDeclarationSyntax>()
@@ -523,6 +553,12 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		{
 			var lines = new List<string>(File.ReadAllLines(fileReadLocation));
 
+			//var fileName = fileReadLocation.Split('\\').LastOrDefault();
+
+			//var aggregateDocument = documentsRegistry.FirstOrDefault(aggregate => aggregate.Document.Name == fileName);
+
+			//aggregateDocument.SyntaxTree.GetRoot().DescendantNodes().OfType<MethodSyntax>()
+
 			WriteUsings(lines);
 			WriteFields(lines);
 			WriteConstructor(lines);
@@ -532,6 +568,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			var file = string.Join("\n", lines);
 
 			file = file.Replace("{requestData}", requestData);
+
+			file = file.Replace("{requestDataObject}", requestDataCallObject);
 
 			File.WriteAllText(fileWriteLocation, file);
 		}
@@ -580,11 +618,12 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			// TODO: We need to change how we find the method.
 			int index = lines.FindIndex(l => l.Contains("var roomPrice =  pricingService.CalculatePrice(roomType);"));
 
-			lines.Insert(index, "\t\t\tvar roomPrice = response.Content.ReadAsAsync<float>().Result;");
+			lines.Insert(index, "\t\t\tvar roomPrice = response.Content.ReadAsAsync<" + invokedMethodReturnType +">().Result;");
 			lines.Insert(index, "\t\t\tvar response = httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\")).Result;");
-			lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(roomType);");
+			lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(requestData);");
+			lines.Insert(index, "\t\t\t{requestDataObject}");
 			lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"Pricing/CalculatePrice\";");
-			lines.RemoveAt(index + 4);
+			lines.RemoveAt(index + 5);
 		}
 
 		private void WriteRequestDataClass(List<string> lines)
