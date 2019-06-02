@@ -62,8 +62,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		public async Task ApplyRefactoring(Solution solution)
 		{
-			//try
-			//{
+			try
+			{
 				ReadUserInput();
 
 				documentsRegistry = await InitializeDocumentRegistry(solution);
@@ -81,12 +81,12 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				CreateMicroserviceDirectory();
 
 				BeginWriting();
-			//}
-			//catch (Exception)
-			//{
-			//	Console.WriteLine("There was an error applying the refactoring.");
-			//	Environment.Exit(0);
-			//}
+			}
+			catch (Exception)
+			{
+				Console.WriteLine("There was an error applying the refactoring.");
+				Environment.Exit(0);
+			}
 		}
 
 		private void ReadUserInput()
@@ -98,16 +98,18 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			Console.WriteLine();
 
 			Console.WriteLine("What is the project name? (e.g. MonolithDemo)");
-			projectName = "MonolithDemo"; //Console.ReadLine();
+			//projectName = "MonolithDemo";
+			projectName = Console.ReadLine();
 			Console.WriteLine();
 
 			Console.WriteLine("What is the location of the file with the method that you wish to extract? (e.g. C:\\Users\\User\\Desktop\\RoomsService.cs)");
-			fileReadLocation = @"C:\Users\Me\source\repos\MonolithDemo\MonolithDemo\Services\Rooms\RoomsService.cs";//Console.ReadLine();
+			//fileReadLocation = @"C:\Users\Me\source\repos\MonolithDemo\MonolithDemo\Services\Rooms\RoomsService.cs";//Console.ReadLine();
+			fileReadLocation = Console.ReadLine();
 			Console.WriteLine();
 
 			Console.WriteLine("What is the name of the method? (e.g. CalculatePrice)");
-			methodName = "CalculatePrice";//Console.ReadLine();
-
+			//methodName = "CalculatePrice";
+			methodName = Console.ReadLine();
 			var repeat = true;
 
 			do
@@ -116,7 +118,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				{
 					Console.WriteLine();
 					Console.WriteLine("What is the method occurrence number (e.g. first occurence corresponds to 1)?");
-					methodOccurrence = 1; //int.Parse(Console.ReadLine());
+					//methodOccurrence = 1;
+					methodOccurrence = int.Parse(Console.ReadLine());
 
 					repeat = false;
 				}
@@ -132,18 +135,19 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			Console.WriteLine();
 			Console.WriteLine("What is the location where you want the project to be generated (e.g. C:\\Users\\User\\Desktop)?");
-			microserviceDirectoryPath = @"C:\Users\Me\Desktop"; //Console.ReadLine();
+			//microserviceDirectoryPath = @"C:\Users\Me\Desktop";
+			microserviceDirectoryPath = Console.ReadLine();
 
-			//Console.WriteLine();
-			//Console.WriteLine("This refactoring will make changes to your project. Please make sure you have a backup or a restore point first. Do you want to proceed? (Y/n)");
-			//var proceed = Console.ReadLine();
+			Console.WriteLine();
+			Console.WriteLine("This refactoring will make changes to your project. Please make sure you have a backup or a restore point first. Do you want to proceed? (Y/n)");
+			var proceed = Console.ReadLine();
 
-			//if (proceed == "n" || proceed == "N" || proceed == "no")
-			//{
-			//	Environment.Exit(0);
-			//}
+			if (proceed == "n" || proceed == "N" || proceed == "no")
+			{
+				Environment.Exit(0);
+			}
 
-			//Console.WriteLine("Applying Refactoring...");
+			Console.WriteLine("Applying Refactoring...");
 		}
 
 		private void CreateMicroserviceDirectory()
@@ -207,13 +211,6 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		private void GetMicroserviceUrl(string basePath, string microserviceSourceNamespace)
 		{
 			var launchSettingsJsonPath = basePath + "\\Properties\\launchSettings.json";
-
-			if (File.Exists(launchSettingsJsonPath))
-			{
-				File.Delete(basePath + "\\Startup.cs");
-			}
-
-			File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");
 
 			if (File.Exists(launchSettingsJsonPath))
 			{
