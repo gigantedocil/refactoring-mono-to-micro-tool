@@ -30,7 +30,7 @@ namespace CodeAnalysisApp.Analyzer
 			using (var workspace = MSBuildWorkspace.Create())
 			{
 				Console.WriteLine("What is the solution path (e.g. C:\\Users\\User\\source\\repos\\MonolithDemo\\MonolithDemo.sln)?");
-				var solutionPath = Console.ReadLine();
+				var solutionPath = @"C:\Users\Me\source\repos\MonolithDemo\MonolithDemo.sln"; //Console.ReadLine();
 				Console.WriteLine();
 
 				// Print message for WorkspaceFailed event to help diagnosing project load failures.

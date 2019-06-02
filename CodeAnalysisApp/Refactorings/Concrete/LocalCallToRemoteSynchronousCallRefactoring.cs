@@ -44,36 +44,26 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 		private string controllerName;
 
-		private readonly string microserviceApplicationUrl = "microserviceUrl";
+		// Input fields for existing project.		
 
-		// Input fields for existing project.
+		private string fileReadLocation;
 
-		//private readonly string microserviceConfigurationKey = "PricingMicroservice";
-
-		//private readonly string wrapperMethodName = "GetRoomPricing";
-
-		//private readonly string wrapperMethodSignature = "public float GetRoomPricing(int roomId)";
-
-		private string fileReadLocation = @"C:\Users\Me\Desktop\RoomsService.cs";
-
-		private string methodName = "CalculatePrice";
+		private string methodName;
 
 		private int methodOccurrence;
 
-		private readonly string fileWriteLocation = @"C:\Users\Me\Desktop\RoomsDemoService.cs";
-
 		// Input fields for generated project.
 
-		private string projectName = "MonolithDemo";
+		private string projectName;
 
-		private string className = "RoomsService.cs";
+		private string className;
 
-		private string microserviceDirectoryPath = @"C:\Users\Me\Desktop";
+		private string microserviceDirectoryPath;
 
 		public async Task ApplyRefactoring(Solution solution)
 		{
-			try
-			{
+			//try
+			//{
 				ReadUserInput();
 
 				documentsRegistry = await InitializeDocumentRegistry(solution);
@@ -91,31 +81,32 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				CreateMicroserviceDirectory();
 
 				BeginWriting();
-			}
-			catch (Exception)
-			{
-				Console.WriteLine("There was an error applying the refactoring.");
-				Environment.Exit(0);
-			}
+			//}
+			//catch (Exception)
+			//{
+			//	Console.WriteLine("There was an error applying the refactoring.");
+			//	Environment.Exit(0);
+			//}
 		}
 
 		private void ReadUserInput()
 		{
 			Console.WriteLine();
-			Console.WriteLine("|| Local Call to Remote Syncrhonous Call Refactoring ||");
+			Console.WriteLine("|| Local Call to Remote Synchronous Call Refactoring ||");
 			Console.WriteLine();
 			Console.WriteLine("Answer the following questions regarding the existing project:");
 			Console.WriteLine();
 
 			Console.WriteLine("What is the project name? (e.g. MonolithDemo)");
-			projectName = Console.ReadLine();
+			projectName = "MonolithDemo"; //Console.ReadLine();
+			Console.WriteLine();
 
 			Console.WriteLine("What is the location of the file with the method that you wish to extract? (e.g. C:\\Users\\User\\Desktop\\RoomsService.cs)");
-			fileReadLocation = Console.ReadLine();
-
+			fileReadLocation = @"C:\Users\Me\source\repos\MonolithDemo\MonolithDemo\Services\Rooms\RoomsService.cs";//Console.ReadLine();
 			Console.WriteLine();
+
 			Console.WriteLine("What is the name of the method? (e.g. CalculatePrice)");
-			methodName = Console.ReadLine();
+			methodName = "CalculatePrice";//Console.ReadLine();
 
 			var repeat = true;
 
@@ -125,7 +116,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				{
 					Console.WriteLine();
 					Console.WriteLine("What is the method occurrence number (e.g. first occurence corresponds to 1)?");
-					methodOccurrence = int.Parse(Console.ReadLine());
+					methodOccurrence = 1; //int.Parse(Console.ReadLine());
 
 					repeat = false;
 				}
@@ -141,16 +132,18 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			Console.WriteLine();
 			Console.WriteLine("What is the location where you want the project to be generated (e.g. C:\\Users\\User\\Desktop)?");
-			microserviceDirectoryPath = Console.ReadLine();
+			microserviceDirectoryPath = @"C:\Users\Me\Desktop"; //Console.ReadLine();
 
-			Console.WriteLine();
-			Console.WriteLine("This refactoring will make changes to your project. Please make sure you have a backup or a restore point first. Do you want to proceed? (Y/n)");
-			var proceed = Console.ReadLine();
+			//Console.WriteLine();
+			//Console.WriteLine("This refactoring will make changes to your project. Please make sure you have a backup or a restore point first. Do you want to proceed? (Y/n)");
+			//var proceed = Console.ReadLine();
 
-			if (proceed == "n" || proceed == "N" || proceed == "no")
-			{
-				Environment.Exit(0);
-			}
+			//if (proceed == "n" || proceed == "N" || proceed == "no")
+			//{
+			//	Environment.Exit(0);
+			//}
+
+			//Console.WriteLine("Applying Refactoring...");
 		}
 
 		private void CreateMicroserviceDirectory()
@@ -228,7 +221,8 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 				var applicationUrlLine = fileContentLines.Where(x => x.Contains("applicationUrl")).ElementAt(1);
 
-				applicationUrl = applicationUrlLine.Split(';').LastOrDefault().Replace("\",", "");
+				// We're assuming the application is being ran with the Kestrel server.
+				applicationUrl = applicationUrlLine.Split(';').FirstOrDefault().Replace("\"", "").Split(' ').LastOrDefault();
 			}
 		}
 
@@ -241,6 +235,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				File.Delete(basePath + "\\Startup.cs");
 			}
 
+			// We're assuming the startup file is in the root directory of the project.
 			File.Copy(startup.Document.FilePath, basePath + "\\Startup.cs");
 
 			if (File.Exists(startupPath))
@@ -386,7 +381,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				if (i == (list.Count() - 1))
 				{
 					requestDataCallObject += "\t\t\t\t" + item.Split(' ').LastOrDefault() + " = " + invokedMethodArguments[i] + "\n";
-					requestDataCallObject += "\t\t\t}\n";
+					requestDataCallObject += "\t\t\t};\n";
 				}
 				else
 				{
@@ -661,7 +656,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 
 			file = file.Replace("{requestDataObject}", requestDataCallObject);
 
-			File.WriteAllText(fileWriteLocation, file);
+			File.WriteAllText(fileReadLocation, file);
 		}
 
 		private void WriteUsings(List<string> lines)
@@ -669,6 +664,21 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			if (lines.FindIndex(l => l.Contains("using Newtonsoft.Json;")) == -1)
 			{
 				lines.Insert(0, "using Newtonsoft.Json;");
+			}
+
+			if (lines.FindIndex(l => l.Contains("using System.Net.Http;")) == -1)
+			{
+				lines.Insert(0, "using System.Net.Http;");
+			}
+
+			if (lines.FindIndex(l => l.Contains("using Microsoft.Extensions.Configuration;")) == -1)
+			{
+				lines.Insert(0, "using Microsoft.Extensions.Configuration;");
+			}
+
+			if (lines.FindIndex(l => l.Contains("using System.Text;")) == -1)
+			{
+				lines.Insert(0, "using System.Text;");
 			}
 		}
 
@@ -679,7 +689,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			lines.Insert(index, "");
 
 			lines.Insert(index, "\t\tprivate readonly HttpClient httpClient;");
-			lines.Insert(index, $"\t\tprivate readonly string {microserviceApplicationUrl};");
+			lines.Insert(index, $"\t\tprivate readonly string microserviceUrl;");
 		}
 
 		private void WriteConstructor(List<string> lines)
@@ -697,14 +707,14 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				if (lines[i].Contains("{"))
 				{
 					lines.Insert(i + 1, "\t\t\thttpClient = clientFactory.CreateClient();");
-					lines.Insert(i + 1, $"\t\t\tpricingServiceApplicationUrl = " + applicationUrl + ";");
+					lines.Insert(i + 1, $"\t\t\tmicroserviceUrl = \"" + applicationUrl + "\";");
 					break;
 				}
 			}
 		}
 
 		private void WriteMethod(List<string> lines)
-		{						
+		{
 			int index = -1;
 			var counter = 0;
 
@@ -730,7 +740,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				lines.Insert(index, "\t\t\tvar response = httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\")).Result;");
 				lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(requestData);");
 				lines.Insert(index, "\t\t\t{requestDataObject}");
-				lines.Insert(index, "\t\t\tvar url = pricingServiceApplicationUrl + \"" + controllerName + "/" + methodName + "\";");
+				lines.Insert(index, "\t\t\tvar url = microserviceUrl + \"" + controllerName + "/" + methodName + "\";");
 				lines.RemoveAt(index + 5);
 			}
 		}
