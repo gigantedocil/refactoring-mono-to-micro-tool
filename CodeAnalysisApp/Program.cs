@@ -7,7 +7,7 @@ namespace CodeAnalysisApp
 	{
 		static async Task Main(string[] args)
 		{
-			await new RefactoringsAnalyzer().BeginAnalysis();			
+			await new RefactoringsAnalyzer().BeginAnalysis();
 		}
 	}
 }
