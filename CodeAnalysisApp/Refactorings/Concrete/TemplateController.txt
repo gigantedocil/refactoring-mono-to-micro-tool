@@ -5,11 +5,11 @@ namespace {newNamespace}.Controllers
 {    
     [ApiController]
     [Route("api/[controller]")]
-    public class {controllerName}Controller : ControllerBase
+    public class {controllerName} : ControllerBase
     {
         private readonly {serviceType} {serviceParameterName};
 
-        public {controllerName}Controller(
+        public {controllerName}(
             {serviceType} {serviceParameterName})
         {
             this.{serviceParameterName} = {serviceParameterName};

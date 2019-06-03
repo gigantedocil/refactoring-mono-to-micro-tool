@@ -147,6 +147,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				Environment.Exit(0);
 			}
 
+			Console.WriteLine();
 			Console.WriteLine("Applying Refactoring...");
 		}
 
@@ -195,7 +196,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			AddController(
 				microserviceSourceNamespace,
 				methodName + "Microservice",
-				controllerName,
+				controllerName + "Controller",
 				invokedMethodDocument.Document.Name.Split('.').FirstOrDefault(),
 				invokedMethodDocument.Document.Name.Split('.').FirstOrDefault().ToLowerInvariant(),
 				invokedMethodDocument.Document.Name,
@@ -216,10 +217,10 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 			{
 				var fileContentLines = new List<string>(File.ReadAllLines(launchSettingsJsonPath));
 
-				var applicationUrlLine = fileContentLines.Where(x => x.Contains("applicationUrl")).ElementAt(1);
+				var applicationUrlLine = fileContentLines.Where(x => x.Contains("applicationUrl")).FirstOrDefault();
 
-				// We're assuming the application is being ran with the Kestrel server.
-				applicationUrl = applicationUrlLine.Split(';').FirstOrDefault().Replace("\"", "").Split(' ').LastOrDefault();
+				// We're assuming the generated microservice will be ran with IIS (Express).
+				applicationUrl = applicationUrlLine.Split(' ').LastOrDefault().Replace("\"", "").Replace(",", "");
 			}
 		}
 
@@ -490,6 +491,26 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 		{
 			var project = solution.Projects.Where(p => p.Name == projectName).FirstOrDefault();
 
+			var deconstructedPath = project.FilePath.Split('\\');
+
+			var startupProjectPath = project.FilePath.Replace(deconstructedPath.LastOrDefault(), "Startup.cs");
+
+			if (File.Exists(startupProjectPath))
+			{
+				var startupLines = new List<string>(File.ReadLines(startupProjectPath));
+
+				if (startupLines.FindIndex(x => x.Contains("\t\t\tservices.AddHttpClient();")) == -1)
+				{
+					var index = startupLines.FindIndex(x => x.Contains("IServiceCollection services")) + 2;
+
+					startupLines.Insert(index, "services.AddHttpClient();");
+
+					var content = string.Join("\n", startupLines);
+
+					File.WriteAllText(startupProjectPath, content);
+				}
+			}
+
 			className = fileReadLocation.Split('\\').LastOrDefault();
 
 			var document = project.Documents.Where(d => d.Name == className).FirstOrDefault();
@@ -704,7 +725,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				if (lines[i].Contains("{"))
 				{
 					lines.Insert(i + 1, "\t\t\thttpClient = clientFactory.CreateClient();");
-					lines.Insert(i + 1, $"\t\t\tmicroserviceUrl = \"" + applicationUrl + "\";");
+					lines.Insert(i + 1, $"\t\t\tmicroserviceUrl = \"" + applicationUrl + "/api\";");
 					break;
 				}
 			}
@@ -737,7 +758,7 @@ namespace CodeAnalysisApp.Refactorings.Concrete
 				lines.Insert(index, "\t\t\tvar response = httpClient.PostAsync(url, new StringContent(body, Encoding.UTF8, \"application/json\")).Result;");
 				lines.Insert(index, "\t\t\tvar body = JsonConvert.SerializeObject(requestData);");
 				lines.Insert(index, "\t\t\t{requestDataObject}");
-				lines.Insert(index, "\t\t\tvar url = microserviceUrl + \"" + controllerName + "/" + methodName + "\";");
+				lines.Insert(index, "\t\t\tvar url = microserviceUrl + \"/" + controllerName + "/" + methodName + "\";");
 				lines.RemoveAt(index + 5);
 			}
 		}

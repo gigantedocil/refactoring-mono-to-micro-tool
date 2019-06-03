@@ -29,6 +29,7 @@ namespace CodeAnalysisApp.Analyzer
 
 			using (var workspace = MSBuildWorkspace.Create())
 			{
+				Console.WriteLine();
 				Console.WriteLine("What is the solution path (e.g. C:\\Users\\User\\source\\repos\\MonolithDemo\\MonolithDemo.sln)?");
 				//var solutionPath = @"C:\Users\Me\source\repos\MonolithDemo\MonolithDemo.sln";
 				var solutionPath = Console.ReadLine();
