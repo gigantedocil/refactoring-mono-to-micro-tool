@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeAnalysisApp", "CodeAnalysisApp\CodeAnalysisApp.csproj", "{B6B6501B-18A1-4CF3-838D-D4E10369B1D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeAnalysisApp", "CodeAnalysisApp\CodeAnalysisApp.csproj", "{B6B6501B-18A1-4CF3-838D-D4E10369B1D5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeAnalysisApp.MonolithDemo", "CodeAnalysisApp.MonolithDemo\CodeAnalysisApp.MonolithDemo.csproj", "{63BA841A-DA45-44C0-BF99-F8D190D96A77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeAnalysisApp.Tests", "CodeAnalysisApp.Tests\CodeAnalysisApp.Tests.csproj", "{3E3FC606-60F1-47C7-8602-7F4AE8067E00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{B6B6501B-18A1-4CF3-838D-D4E10369B1D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6B6501B-18A1-4CF3-838D-D4E10369B1D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B6B6501B-18A1-4CF3-838D-D4E10369B1D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63BA841A-DA45-44C0-BF99-F8D190D96A77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63BA841A-DA45-44C0-BF99-F8D190D96A77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63BA841A-DA45-44C0-BF99-F8D190D96A77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63BA841A-DA45-44C0-BF99-F8D190D96A77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E3FC606-60F1-47C7-8602-7F4AE8067E00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E3FC606-60F1-47C7-8602-7F4AE8067E00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E3FC606-60F1-47C7-8602-7F4AE8067E00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E3FC606-60F1-47C7-8602-7F4AE8067E00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
