@@ -80,7 +80,7 @@ namespace CodeAnalysisApp.Tests
 		}
 
 		[Fact]
-		public void CheckIfMockyMockExists()
+		public void CheckIfMockExists()
 		{
 			var filePath = microservicePath + "Source\\MockyMock.cs";
 
