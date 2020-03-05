@@ -35,7 +35,7 @@ The tool was built to support the easy addition of more refactorings in the futu
 
 # Testing
 
-In order to test the tool and the refactoring, a sample monolith project was used to apply the refactoring and verify if the output, in this case, a new project with the correct files with the correct content, were generated properly. A suite of tests compares the generated files against files that should be in the output and asserts if they are the same. If they are, then the test passes and gives us a guarantee that the tool is working correctly. The tests can be run as a  regression battery in the future when new changes or refactorings are, respectively, introduced or added to make sure what already exists does not break with these new changes.
+In order to test the tool and the refactoring, a sample monolith project was used to apply the refactoring and verify if the output, in this case, a new project with the correct files, were generated properly. The tests can be run as a regression battery in the future when new changes or refactorings are, respectively, introduced or added to make sure what already exists does not break with these new changes.
 
 # User Interface
 
@@ -51,4 +51,4 @@ a restore point first. Do you want to proceed?
 
 # Usage
 
-In order to use this tool you should clone this repo
+In order to use this tool you should clone this repo and run the code analyzer app. For the best results you should use the tool on the sample monolith as it was with that monolith that the tool has been tested with.
