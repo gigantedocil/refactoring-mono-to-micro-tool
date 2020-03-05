@@ -2,7 +2,7 @@
 
 The main goal of this tool is to provide the means to automatically apply complex architectural refactorings with the objective of aiding in the transformation of a monolithic system into microservices.
 
-This tool is part of the result of a master thesis entitled *Refactoring Monoliths into Microservices*. The thesis tries to establish a catalogue of refactoring patterns commonly used to transform monoliths into microservices which are derived from an analysis of the state of the art on this topic and some surveys to people with experience in the area, and uses the tool to test the viability of automating those refactorings. If you are interested about this topic you can read the entire published work [here](https://hdl.handle.net/10216/122620).
+This tool is part of the result of a master thesis entitled *Refactoring Monoliths into Microservices*. The thesis tries to establish a catalogue of refactoring patterns commonly used to transform monoliths into microservices which are derived from an analysis of the state of the art on this topic, and uses the tool to test the viability of automating those refactorings. If you are interested about this topic you can read the entire published work [here](https://hdl.handle.net/10216/122620).
 
 At the time being, only the *Local Method Method Call to Synchronous Remote Call*, which transforms a local call into a remote call with the use of HTTP, has been implemented.
 
