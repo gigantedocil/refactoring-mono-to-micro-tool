@@ -12,6 +12,8 @@ This tool was implemented targeting the .NET Core framework version 2.2 and deve
 
 The tool was implemented as a console application. Every interaction with the user is performed via a terminal. The user is prompted to answer questions related to the refactorings that he wishes to apply.
 
+Although promising, due to time constraints the tool was only tested with a sample monolith (that is also shipped in the source of this repo) and in very simple scenarios.
+
 Current limitations:
 
 - The project must be a .NET Core project and have web dependencies installed (e.g.,
