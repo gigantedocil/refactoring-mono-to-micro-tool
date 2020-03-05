@@ -41,7 +41,7 @@ In order to test the tool and the refactoring, a sample monolith project was use
 
 ## User Interface
 
-At the moment, the user interacts with the tool via a command line interface (Fig. 6.3). The terminal asks questions which the user must answer in order to proceed with the automatic application of the refactoring. Currently, the following questions must be answered in order to apply the refactoring:
+At the moment, the user interacts with the tool via a command line interface. The terminal asks questions which the user must answer in order to proceed with the automatic application of the refactoring. Currently, the following questions must be answered in order to apply the refactoring:
 - What is the solution path?
 - What is the project name?
 - What is the location of the file with the method that you wish to extract?
