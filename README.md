@@ -51,4 +51,15 @@ a restore point first. Do you want to proceed?
 
 # Usage
 
-In order to use this tool you should clone this repo and run the code analyzer app. For the best results you should use the tool on the sample monolith as it was with that monolith that the tool has been tested with.
+In order to start using this tool you should:
+
+- Clone this repo.
+- Run the CodeAnalysisApp.MonolithDemo with IIS Express and perform an HTTP
+GET request with an HTTP client (e.g., Postman) to the
+http://localhost:23515/api/1/price endpoint and verify that it is returning 12.
+- Stop the project.
+- Run the project CodeAnalysisApp. A terminal will pop up and ask a series of
+questions. Answer the questions with the default answers which appear inside parenthesis after each question.
+- After the questions are answered the refactoring will be applied automatically.
+- Run the monolith and the newly generated microservice and call the first endpoint again to verify that
+it is still returning 12.
