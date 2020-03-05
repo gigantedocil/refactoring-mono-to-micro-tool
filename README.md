@@ -6,7 +6,7 @@ This tool is part of the result of a master thesis entitled *Refactoring Monolit
 
 At the time being, only the *Local Method Method Call to Synchronous Remote Call*, which transforms a local call into a remote call with the use of HTTP, has been implemented.
 
-# Remarks and Limitations
+## Remarks and Limitations
 
 This tool was implemented targeting the .NET Core framework version 2.2 and developed in C#. It makes use of the Roslyn .NET Compiler 3 to get access to the project’s metadata and provides an API that can be used to perform static analysis of the documents that comprise the project and respective content by analysing their abstract syntax trees, semantic models and symbols.
 
@@ -35,11 +35,11 @@ Finally, on the original project an HTTP client is configured and added to the c
 
 The tool was built to support the easy addition of more refactorings in the future. This is possible due to the use of a factory and the strategy design pattern. Each refactoring is a strategy, and a factory is used to decide at run time which strategy ought to be used. Because all strategies implement the same interface, the rest of the program can be written against the API declared by that interface and thus it is possible to take advantage of polymorphism.
 
-# Testing
+## Testing
 
 In order to test the tool and the refactoring, a sample monolith project was used to apply the refactoring and verify if the output, in this case, a new project with the correct files, were generated properly. The tests can be run as a regression battery in the future when new changes or refactorings are, respectively, introduced or added to make sure what already exists does not break with these new changes.
 
-# User Interface
+## User Interface
 
 At the moment, the user interacts with the tool via a command line interface (Fig. 6.3). The terminal asks questions which the user must answer in order to proceed with the automatic application of the refactoring. Currently, the following questions must be answered in order to apply the refactoring:
 - What is the solution path?
@@ -51,7 +51,7 @@ At the moment, the user interacts with the tool via a command line interface (Fi
 - This refactoring will make changes to your project. Please make sure you have a backup or
 a restore point first. Do you want to proceed?
 
-# Usage
+## Usage
 
 In order to start using this tool you should:
 
